@@ -1,7 +1,7 @@
 /**
  * @module Content_Interactions
- * 
- * 
+ *
+ *
  */
 
 var welcome_texts = ["Willkommen.","Bienvenue.","Benvenuto.","Dobrodoš​‌li."];
@@ -14,7 +14,7 @@ var languages = ["Deutsch","Français","Italiano","Slovenščina"];
 
 var instruction_texts =[
 'Verraten Sie uns, wie Sie zu bestimmten almwirtschaftlichen Begriffen sagen! Wählen Sie dazu Ihre Gemeinde und einen der vorgegebenen Begriffe aus und tragen Sie im Antwortfeld eine Bezeichnung ein. Vor besonders wichtigen Begriffen steht ein “!“. Die von Ihnen eingetragenen Wörter werden auf der Karte in grün markiert; die Wörter von anderen Personen sind blau markiert. Durch Klick auf den jeweiligen Eintrag können Sie diesen ändern oder löschen. Setzen Sie eventuelle Anmerkungen bitte in Klammern! Falls nötig, können Sie mehrere Bezeichnungen nennen und diese durch ein Komma trennen. Wir würden uns freuen, wenn Sie sich im Anschluss registrieren würden, um ihre Ergebnisse zu speichern. Je mehr Wörter Sie eintragen, umso besser - und kommen Sie jederzeit gerne wieder!',
-'Aidez-nous à mieux connaître le langage alpin! Sélectionnez votre commune et un des concepts proposés; insérez ensuite le mot dialectal dans la case réponse. Devant des concepts particulièrement importants se trouve un “!”. Les mots que vous insérez apparaissent sur la carte sous forme de symboles verts; les mots insérés par d\'autres personnes sont symbolisés en bleu. Mettez des commentaires éventuels entre parenthèses, s´il vous plaît! Si nécessaire, vous pouvez insérer plusieurs mots et les séparer par une virgule. Enfin, nous vous remercierions de vous enregistrer pour mémoriser vos résultats. Plus mots vous insérez, mieux c`est - Vous serez toujours le bienvenu à la page!', 
+'Aidez-nous à mieux connaître le langage alpin! Sélectionnez votre commune et un des concepts proposés; insérez ensuite le mot dialectal dans la case réponse. Devant des concepts particulièrement importants se trouve un “!”. Les mots que vous insérez apparaissent sur la carte sous forme de symboles verts; les mots insérés par d\'autres personnes sont symbolisés en bleu. Mettez des commentaires éventuels entre parenthèses, s´il vous plaît! Si nécessaire, vous pouvez insérer plusieurs mots et les séparer par une virgule. Enfin, nous vous remercierions de vous enregistrer pour mémoriser vos résultats. Plus mots vous insérez, mieux c`est - Vous serez toujours le bienvenu à la page!',
 'Aiutateci a conoscere meglio il linguaggio alpino! Scegliete il vostro comune e uno dei concetti proposti e inserite la parola dialettale nel campo risposta. Davanti a concetti di particolare importanza si trova un “!”. Le parole che inserite appariranno sulla carta evidenziate in verde; le parole inserite da altre persone sono evidenziate in blu. Cliccando su vostro contributo potete cambiarlo o cancellarlo. Mettete eventuali commenti fra parentesi, per favore! Se necessario, potete inserire parecchie parole e separarle con una virgola. Poi saremmo lieti se vi registrate per memorizzare i vostri risultati. Più parole inserite, meglio è - Siete sempre benvenuti ogni volta che tornate sul sito!',
 'Pomagajte nam bolje spoznati alpski jezik! Izberite svoj kraj in enega od danih pojmov ter v polje za odgovor vnesite oznako. Pred posebno pomembnimi pojmi se nahaja ”!”. Besede, ki jih boste vnesli, bodo na karti prikazane zeleno; odgovori drugih oseb bodo modre barve. Klikajoč konkreten vpis lahko ga spremenite ali izbrišete. Prosimo, da morebitne pripombe postavite v oklepaje. Če je potrebno, jih lahko označite več in jih med seboj ločite z vejico. Prosimo, da se na koncu registrirate in tako shranite svoje podatke. Čim več konceptov vnesete tem bolje -in se vračajte k nam kadarkoli!']
 
@@ -111,7 +111,7 @@ var important_concepts_texts = [
 ]
 
 
-var tooltips = 
+var tooltips =
 
 [
   {name:"#word_span",array:concept_select_texts},
@@ -329,6 +329,7 @@ var break_cycle = false;
  */
 var current_language = 0;
 var va_phase = 1;
+var active_va_phases = [1,2];
 
 var selectbox;
 
@@ -338,12 +339,14 @@ var selectbox;
  */
 var concepts_cur_lang;
 
+var filtered_data_phases = [];
 
-var filtered_data_phase1;
-var filtered_data_phase2;
+// var filtered_data_phase1;
+// var filtered_data_phase2;
 var filtered_concept_cur_lang1;
 var filtered_concept_cur_lang2;
 
+var filtered_location_submited_data_phases = [];
 var filtered_location_submited_data_phase1;
 var filtered_location_submited_data_phase2;
 /**
@@ -390,7 +393,8 @@ var centerCoordinates_locations = [];
 
 var saved_location_index = -1;
 var saved_location_name;
-var current_concept_index = [-1,-1,-1];
+// var current_concept_index = [-1,-1,-1];
+var current_concept_index = -1;
 var current_dialect_index = -1;
 
 
@@ -428,7 +432,7 @@ var url_concept_id;
 var wavesurfer;
 
 /**
- * Initializes UI elements according to the browser. Sets the map in the center of the browser. 
+ * Initializes UI elements according to the browser. Sets the map in the center of the browser.
  *
  */
 function initTool(){
@@ -437,17 +441,17 @@ function initTool(){
   url_concept_id = url.searchParams.get("concept");
   url_dialect_cluster = url.searchParams.get("dcluster");
   url_dialect = url.searchParams.get("dialect");
-  
-  if(url_concept_id)jQuery('body').addClass('bavaria_version'); 
+
+  if(url_concept_id)jQuery('body').addClass('bavaria_version');
 
 
 
   calculateCenter();
 
-  offsetHeight = jQuery('#left_menu').outerHeight();  
+  offsetHeight = jQuery('#left_menu').outerHeight();
 
   google.maps.event.addDomListener(window, 'resize', function() {
-   
+
   map.setCenter(center);
   setDynamicContent();
 
@@ -459,22 +463,22 @@ function initTool(){
   }
 
 
-  addModalListeners(); 
+  addModalListeners();
 
 
   if(language_is_set && selected_dialect){
     //console.log("Lang And Dialect Selected");
    current_language = parseInt(crowder_lang);
 
-    
-   setRandomTitelImage(function(){   
+
+   setRandomTitelImage(function(){
     jQuery('#welcomeback_modal').addClass("fade");
 
      if(url_concept_id){
 
-      jQuery('#welcomeback_modal').find('#modal_welcome').html("Willkommen!"); 
+      jQuery('#welcomeback_modal').find('#modal_welcome').html("Willkommen!");
      }else{
-      jQuery('#welcomeback_modal').find('#modal_welcome').html(welcomeback_texts[current_language]); 
+      jQuery('#welcomeback_modal').find('#modal_welcome').html(welcomeback_texts[current_language]);
      }
 
      setTimeout(function() {
@@ -485,18 +489,18 @@ function initTool(){
 
   },".welcome_modal");
 
-    
+
   }else if(language_is_set && !selected_dialect){
     console.log("Lang selected, Dialect Not");
 
     /*current_language=-1;*/
-    
+    current_language = parseInt(crowder_lang);
 
-    
+
     initWelcomeModal();
 
     clone_1 = jQuery("#modal_welcome").clone().attr('id','modal_welcome_c');
-    clone_2 = jQuery("#slogan_id").clone().attr('id','slogan_id_c');    
+    clone_2 = jQuery("#slogan_id").clone().attr('id','slogan_id_c');
     jQuery("#modal_welcome").replaceWith(clone_1);
     jQuery("#slogan_id").replaceWith(clone_2);
 
@@ -516,7 +520,7 @@ function initTool(){
 
 
     setRandomTitelImage(function(){
-        
+
          jQuery('#welcome_modal').modal({
           backdrop: 'static',
           keyboard: false
@@ -540,7 +544,7 @@ function initTool(){
     initWelcomeModal();
 
       setRandomTitelImage(function(){
-        
+
          jQuery('#welcome_modal').modal({
           backdrop: 'static',
           keyboard: false
@@ -548,13 +552,13 @@ function initTool(){
 
     },".welcome_modal");
   }
-  
 
-}   
+
+}
 
 /**
  * Ajusts HTML-Elemets size according to the browser.
- * 
+ *
  */
 function setDynamicContent(source){
 
@@ -572,10 +576,10 @@ function setDynamicContent(source){
             }
 
             else{
-            jQuery('#left_menu').css('padding-left',"20px").css('padding-right',"20px");  
+            jQuery('#left_menu').css('padding-left',"20px").css('padding-right',"20px");
             jQuery('.row_2').css('text-align','right');
-      
- 
+
+
             }
 
 
@@ -602,30 +606,30 @@ function setDynamicContent(source){
             if(jQuery('#image_modal').hasClass('in')){
 
              jQuery('#image_modal').find('.i_fake_body').height('65vh');
-       
+
               var modal_margin = 30;
               if(doc_width<576) modal_margin = 10;
 
-        
+
               var modal_height = jQuery('#image_modal').find('.i_fake_body').height()+23 + modal_margin;  //23 = footer, 30 = margin top
               var offsetHeight_l = document.getElementById('left_menu').offsetHeight + 20;  //20 = before;
 
               var margin = 15;
-        
+
               if((modal_height+offsetHeight_l) > doc_height)  {
 
                 var dif = doc_height-(modal_height+offsetHeight_l);
                 var current_height = jQuery('#image_modal').find('.i_fake_body').height();
                 var new_height =  current_height+dif-margin;
                 jQuery('#image_modal').find('.i_fake_body').height(new_height);
-               
+
               }
 
             }
 
           if(source!='image') {
 
-   
+
 
           for(var i=0;i<tooltips.length;i++){
              jQuery(tooltips[i].name).popover('dispose');
@@ -640,7 +644,7 @@ function setDynamicContent(source){
           showLoginPopUp();
 
           }
-      
+
 
          if(jQuery('.list_modal').hasClass('in')){
 
@@ -675,7 +679,7 @@ function setDynamicContent(source){
 
 
         jQuery('#location_span').popover('dispose');
-                          
+
               jQuery('#location_span').popover({
               trigger:"manual",
               placement:"top",
@@ -684,7 +688,7 @@ function setDynamicContent(source){
               content:'<div class="pop_location_span custom_popover_content">'+location_select_texts_with_br[current_language]+'</div>',
               offset:offsetstring,
               animation:true
-         
+
               });
 
               if(stage==1){
@@ -693,10 +697,10 @@ function setDynamicContent(source){
 
                    jQuery('.pop_location_span').parent().on('click',function(){
                     handleLocationSpanClick();
-                  }).addClass('c_hover');  
+                  }).addClass('c_hover');
 
-              }         
-          
+              }
+
 
             }
 
@@ -719,14 +723,14 @@ function setDynamicContent(source){
                       setTimeout(function(){ submit_button_clicked = false; /*console.log('submit button: After saveword() ' + submit_button_clicked);*/}, 1000);
                     }
 
-                }).addClass('c_hover');  
+                }).addClass('c_hover');
 
-              } 
+              }
 
 
           if(source!="list")showPopUp();
 
-        } 
+        }
 
         if(old_doc_width>575 &&doc_width<575){
 
@@ -745,7 +749,7 @@ function setDynamicContent(source){
           jQuery('#register_modal .custom-modal-footer button').css('font-size',"14px");
           jQuery('#register_modal .modal-body').css('padding-right',"10px");
         }
-        
+
 
       old_doc_width = doc_width;
 
@@ -753,439 +757,466 @@ function setDynamicContent(source){
 /**
  * Initializes the CS-Tool. Performes Ajax Calls to fetch data(locations, user entries) from the server. The gathered data is then stored in global variables.
  */
-function startMainTool(){
+function startMainTool() {
 
-create_cookie(current_language);
+  create_cookie(current_language);
 
-var menu_content = jQuery(leftmenu_contents[current_language]);
+  var menu_content = jQuery(leftmenu_contents[current_language]);
 
-jQuery('#left_menu').append(menu_content);
-menu_content.show();
+  jQuery('#left_menu').append(menu_content);
+  menu_content.show();
 
-//audio data visualization
-wavesurfer = add_wavesurfer();
+  //audio data visualization
+  wavesurfer = add_wavesurfer();
 
-//translating text in register modal
-if(!userLoggedIn){
-  add_translation_register_modal();
-}
+  //translating text in register modal
+  if (!userLoggedIn) {
+    add_translation_register_modal();
+  }
 
-if(selected_dialect !== ""){
-  display_dialect();
-}
+  if (selected_dialect !== "") {
+    display_dialect();
+  }
 
-if(!language_is_set)showCustomBackdrop();
+  if (!language_is_set) showCustomBackdrop();
 
-  jQuery('#submitanswer').on('click', function(){
+  jQuery('#submitanswer').on('click', function() {
     console.log('submit button: Before saveword() ' + submit_button_clicked);
 
-    if(!submit_button_clicked){
+    if (!submit_button_clicked) {
       saveWord();
       submit_button_clicked = true;
-      setTimeout(function(){ submit_button_clicked = false; /*console.log('submit button: After saveword() ' + submit_button_clicked);*/}, 1000);
-        
-    
+      setTimeout(function() {
+        submit_button_clicked = false; /*console.log('submit button: After saveword() ' + submit_button_clicked);*/
+      }, 1000);
+
+
     }
 
   })
 
   /*set user language -> to be saved as current_language in the wp_db*/
-  if(!language_is_set){ // (crowder_lang/*.localeCompare("") == 0*/ || current_language != crowder_lang || /*crowder_lang.localeCompare("-1") ||*/ crowder_lang == -1 ) && userLoggedIn
+  if (!language_is_set) { // (crowder_lang/*.localeCompare("") == 0*/ || current_language != crowder_lang || /*crowder_lang.localeCompare("-1") ||*/ crowder_lang == -1 ) && userLoggedIn
 
     jQuery.ajax({
-                      url: ajax_object.ajax_url,
-                      type: 'POST',
-                      data: {
-                        action : 'save_lang_for_user',
-                        lang : current_language
-                      },
-                      success : function( response ) {
-                        /*console.log("language saved"); 
-                        console.log("Saved language: " + JSON.parse(response));*/
-                    }
+      url: ajax_object.ajax_url,
+      type: 'POST',
+      data: {
+        action: 'save_lang_for_user',
+        lang: current_language
+      },
+      success: function(response) {
+        /*console.log("language saved");
+        console.log("Saved language: " + JSON.parse(response));*/
+      }
     });
   }
 
   /*ajax call to get all locations in the choosen language*/
   /**
-                             * Get all images links from server.
-                             * @async
-                             * @function gets image links
-                             * @return {Array} images     
-                             */
-                            jQuery.ajax({
-                            url: ajax_object.ajax_url,
-                            type: 'POST',
-                            data: {
-                              action : 'getImage',
-                            },
-                            success : function( response ) {
-                              images = JSON.parse(response);
-                            }});
+   * Get all images links from server.
+   * @async
+   * @function gets image links
+   * @return {Array} images
+   */
+  jQuery.ajax({
+    url: ajax_object.ajax_url,
+    type: 'POST',
+    data: {
+      action: 'getImage',
+    },
+    success: function(response) {
+      images = JSON.parse(response);
+    }
+  });
 
-/**
- * Get locations in current language
- * @async
- * @function getTableData
- */
-//console.log("Ajax Call - Get Location List");
-jQuery.ajax({
-            url: ajax_object.ajax_url,
-            type: 'POST',
-            data: {
-              action : 'getlocations',
-              lang : current_language
-            },
-            success : function( response ) {
-              locations = JSON.parse(response);
+  /**
+   * Get locations in current language
+   * @async
+   * @function getTableData
+   */
+  jQuery.ajax({
+    url: ajax_object.ajax_url,
+    type: 'POST',
+    data: {
+      action: 'getlocations',
+      lang: current_language
+    },
+    success: function(response) {
+      locations = JSON.parse(response);
 
-              location_data = getTableData(locations,"location");
-              initLocationsModal();
-}});
-
-    /**
-     * Get Aeusserungen and the Manicipilities associated
-     * @async
-     * @function getTableData
-     */
-    
-      
+      location_data = getTableData(locations, "location");
+      initLocationsModal();
+    }
+  });
 
 
   /*ajax call for all the concepts in the choosen language*/
-  
   jQuery.ajax({
-      url: ajax_object.ajax_url,
-      type: 'POST',
-      data: {
-        action : 'getKonzepte',
-        lang : current_language
-      },
-      success : function( response ) {
-        concept_data = JSON.parse(response);
-        concepts_cur_lang = concept_data;
+    url: ajax_object.ajax_url,
+    type: 'POST',
+    data: {
+      action: 'getKonzepte',
+      lang: current_language
+    },
+    success: function(response) {
+      concept_data = JSON.parse(response);
+      concepts_cur_lang = concept_data;
 
-        // filtered_concept_cur_lang1 = concept_data.filter( function ( value, index ) { 
-        //                  var rand = Math.floor(Math.random() * 2) + 1;
-        //                   //value.va_phase = rand;
-        //                   return value.va_phase == 1 ? true : false;
-        //           });
+      filtered_concept_cur_lang1 = concept_data.filter(value => value.va_phase == 1);
+      filtered_concept_cur_lang2 = concept_data.filter(value => value.va_phase == 2);
 
-        // filtered_concept_cur_lang2 = concept_data.filter( function ( value, index ) { 
-        //                   var rand = Math.floor(Math.random() * 2) + 1;
-        //                   //value.va_phase = rand;
-        //                   return value.va_phase == 2 ? true : false;
-        //           });
-     
-        filtered_concept_cur_lang1 = concept_data.filter( value => value.va_phase == 1);
-        filtered_concept_cur_lang2 = concept_data.filter( value => value.va_phase == 2);
+      //init concept data with all concept data
+      concept_data = getTableData(concepts_cur_lang, "concept"); //  //filtered_concept_cur_lang1
 
-        concept_data = getTableData(filtered_concept_cur_lang1,"concept"); // concepts_cur_lang
-        va_phase = 1;
-        filtered_data_phase1 = getTableData(filtered_concept_cur_lang1,"concept");
-        filtered_data_phase2 = getTableData(filtered_concept_cur_lang2,"concept");
-        
-        // concept_data = getTableData(concepts_cur_lang,"concept");
-        initConceptModal();
+      console.log(concepts_cur_lang.length)
+      console.log(filtered_concept_cur_lang1.length)
+      console.log(filtered_concept_cur_lang2.length)
 
-        allow_select = true;
 
-        //concepts_index_by_id = createConceptIndexList(concepts_cur_lang);
+      va_phase = 0;
 
-        concepts_index_by_id[1] = createConceptIndexList(filtered_concept_cur_lang1,1);
-        concepts_index_by_id[2] = createConceptIndexList(filtered_concept_cur_lang2,2);
+      filtered_data_phase1 = getTableData(filtered_concept_cur_lang1, "concept");
+      filtered_data_phase2 = getTableData(filtered_concept_cur_lang2, "concept");
 
-        unanswered_concepts = createUnansweredIndex(); 
-        
-      get_submited_answers(function(){
-        // jQuery('#custom_backdrop').fadeOut('slow',function(){
-        //   jQuery(this).remove(); 
-        //   console.log(jQuery('#custom_backdrop'));
-        // });
-        //jQuery('#custom_backdrop').fadeOut('slow');   
+      //FUTURE USE CHECKBOX FUNTIONALITY
+
+      filtered_data_phases[0] = concept_data;
+      filtered_data_phases[1] = filtered_data_phase1;
+      filtered_data_phases[2] = filtered_data_phase2;
+
+
+      initConceptModal();
+
+      allow_select = true;
+
+      //concepts_index_by_id = createConceptIndexList(concepts_cur_lang);
+
+      concepts_index_by_id[0] = createConceptIndexList(concepts_cur_lang, 0);
+      concepts_index_by_id[1] = createConceptIndexList(filtered_concept_cur_lang1, 1);
+      concepts_index_by_id[2] = createConceptIndexList(filtered_concept_cur_lang2, 2);
+
+      unanswered_concepts = createUnansweredIndex();
+
+      get_submited_answers(function() {
         setDynamicContent();
-        jQuery('#left_menu').css('opacity','0');
+        jQuery('#left_menu').css('opacity', '0');
         jQuery('#left_menu').show();
         offsetHeight = document.getElementById('left_menu').offsetHeight;
-        jQuery('#left_menu').css('bottom',-offsetHeight);
+        jQuery('#left_menu').css('bottom', -offsetHeight);
 
-        jQuery('#left_menu').css('opacity','1');
-        jQuery('#left_menu').animate({ bottom: '+='+offsetHeight }, 400,'swing', function() {
-          setTimeout(function(){menu_is_up();},500); // set timeout to display toolpits after menu is up and everything else is displayed
+        jQuery('#left_menu').css('opacity', '1');
+        jQuery('#left_menu').animate({
+          bottom: '+=' + offsetHeight
+        }, 400, 'swing', function() {
+          setTimeout(function() {
+            menu_is_up();
+          }, 500); // set timeout to display toolpits after menu is up and everything else is displayed
         });
+      });
 
-      }); 
-
-      get_submited_answers_current_user(); 
-
-
-//code below executed in actions_ajaxs as populate_concept_span()
-// jQuery('#custom_backdrop').fadeOut('slow',function(){jQuery(this).remove();});
-// setDynamicContent();
-// jQuery('#left_menu').css('opacity','0');
-// jQuery('#left_menu').show();
-// offsetHeight = document.getElementById('left_menu').offsetHeight;
-// jQuery('#left_menu').css('bottom',-offsetHeight);
-
-// jQuery('#left_menu').css('opacity','1');
-// jQuery('#left_menu').animate({ bottom: '+='+offsetHeight }, 400,'swing', function() {
-
-// setTimeout(function(){menu_is_up();},500); // set timeout to display toolpits after menu is up and everything else is displayed
+      get_submited_answers_current_user();
 
 
-// });
+      //code below executed in actions_ajaxs as populate_concept_span()
+      // jQuery('#custom_backdrop').fadeOut('slow',function(){jQuery(this).remove();});
+      // setDynamicContent();
+      // jQuery('#left_menu').css('opacity','0');
+      // jQuery('#left_menu').show();
+      // offsetHeight = document.getElementById('left_menu').offsetHeight;
+      // jQuery('#left_menu').css('bottom',-offsetHeight);
 
-/*
-AUDIO FUNCTION
-*/
+      // jQuery('#left_menu').css('opacity','1');
+      // jQuery('#left_menu').animate({ bottom: '+='+offsetHeight }, 400,'swing', function() {
 
-//add_audio_html();
+      // setTimeout(function(){menu_is_up();},500); // set timeout to display toolpits after menu is up and everything else is displayed
 
 
-  jQuery('#left_menu').hammer().bind("swipedown", function(){
-    if(jQuery(this).is(':visible')){
-        jQuery(this).animate({ bottom: '-='+offsetHeight }, 400,'swing',function(){jQuery(this).hide();jQuery('#fake_arrow').show();}); 
-        jQuery('.popover').hide();
-     }
+      // });
+
+      /*
+      AUDIO FUNCTION
+      */
+
+      //add_audio_html();
+
+
+      jQuery('#left_menu').hammer().bind("swipedown", function() {
+        if (jQuery(this).is(':visible')) {
+          jQuery(this).animate({
+            bottom: '-=' + offsetHeight
+          }, 400, 'swing', function() {
+            jQuery(this).hide();
+            jQuery('#fake_arrow').show();
+          });
+          jQuery('.popover').hide();
+        }
+      });
+
+      jQuery('#swipe-up-div').hammer().bind("swipedown", function() {
+        if (jQuery('#left_menu').is(':visible')) {
+          jQuery('#left_menu').animate({
+            bottom: '-=' + offsetHeight
+          }, 400, 'swing', function() {
+            jQuery('#left_menu').hide();
+            jQuery('#fake_arrow').show();
+          });
+          jQuery('.popover').hide();
+        }
+      });
+
+
+      jQuery('#swipe-up-div').hammer().bind("swipeup", function() {
+        if (jQuery('#left_menu').is(':hidden')) {
+          jQuery('#left_menu').show().animate({
+            bottom: '+=' + offsetHeight
+          }, 400, 'swing', function() {
+            jQuery('.popover').show();
+          });
+          jQuery('#fake_arrow').hide();
+        }
+      });
+
+      jQuery('#fake_arrow').hammer().bind("swipeup", function() {
+        if (jQuery('#left_menu').is(':hidden')) {
+          jQuery('#left_menu').show().animate({
+            bottom: '+=' + offsetHeight
+          }, 400, 'swing', function() {
+            jQuery('.popover').show();
+          });
+          jQuery('#fake_arrow').hide();
+
+        }
+      });
+
+
+      jQuery('#left_menu').data("hammer").get('swipe').set({
+        direction: Hammer.DIRECTION_ALL
+      });
+      jQuery('#swipe-up-div').data("hammer").get('swipe').set({
+        direction: Hammer.DIRECTION_ALL
+      });
+      jQuery('#fake_arrow').data("hammer").get('swipe').set({
+        direction: Hammer.DIRECTION_ALL
+      });
+
+
+
+      jQuery('#word_span').on('click', function() {
+
+        handleWordSpanClick();
+      });
+
+      jQuery('#location_span').on('click', function() {
+
+        handleLocationSpanClick();
+
+      })
+
+
+      jQuery('#user_input').on('keyup', function() {
+
+        if (process_restarted) {
+          closeAllInfoWindows();
+          process_restarted = false;
+        }
+
+        if (concept_selected && location_selected && stage == 3) {
+          word_entered = true;
+
+          setTimeout(function() {
+
+            showPopUp();
+          }, 100);
+
+        }
+
+
+
+      })
+
+
+
+    } //success
+
   });
 
-  jQuery('#swipe-up-div').hammer().bind("swipedown", function(){
-    if(jQuery('#left_menu').is(':visible')){
-      jQuery('#left_menu').animate({ bottom: '-='+offsetHeight }, 400,'swing',function(){jQuery('#left_menu').hide();jQuery('#fake_arrow').show();});
-      jQuery('.popover').hide();
-    }  
-    }); 
 
-
-    jQuery('#swipe-up-div').hammer().bind("swipeup", function(){
-    if(jQuery('#left_menu').is(':hidden')){
-      jQuery('#left_menu').show().animate({ bottom: '+='+offsetHeight }, 400,'swing',function(){jQuery('.popover').show();});
-      jQuery('#fake_arrow').hide();
-    }  
-    });
-
-    jQuery('#fake_arrow').hammer().bind("swipeup", function(){
-    if(jQuery('#left_menu').is(':hidden')){
-      jQuery('#left_menu').show().animate({ bottom: '+='+offsetHeight }, 400,'swing',function(){jQuery('.popover').show();});
-      jQuery('#fake_arrow').hide();
-     
-    }
-    });
-
-
-  jQuery('#left_menu').data("hammer").get('swipe').set({direction: Hammer.DIRECTION_ALL}); 
-  jQuery('#swipe-up-div').data("hammer").get('swipe').set({direction: Hammer.DIRECTION_ALL}); 
-  jQuery('#fake_arrow').data("hammer").get('swipe').set({direction: Hammer.DIRECTION_ALL}); 
-
-
-
-  jQuery('#word_span').on('click',function(){
-    
-    handleWordSpanClick();
-  });
-
-  jQuery('#location_span').on('click',function(){
-
-    handleLocationSpanClick();
-
-  })
-
-
- jQuery('#user_input').on('keyup',function(){
-
-if(process_restarted){closeAllInfoWindows();process_restarted=false;}
-
- if(concept_selected && location_selected &&stage==3){
- word_entered = true;
-
-   setTimeout(function() {
-
-      showPopUp();
-   }, 100);
-   
- }
-
-
-
- })
-
-
-
- } //success
-    
-  }); 
-
-  
 
 }
 
 
 /**
  * Initializes the Modal at the start of the CS-Tool, when the user has not yet choosen a language, has not yet registred.
- * 
+ *
  */
 function initWelcomeModal(){
 
-  jQuery('#welcome_modal').on('show.bs.modal', function (e) {
+    jQuery('#welcome_modal').on('show.bs.modal', function(e) {
 
-       showCustomModalBackdrop();
-       
+        showCustomModalBackdrop();
 
-       selectbox = jQuery('#language_select', this).selectBoxIt({theme: "bootstrap",defaultText: "Sprache ...",showFirstOption: false});
-       jQuery(".infotext_container").mCustomScrollbar({ scrollButtons:{enable: true}});
 
-       cycleText(jQuery("#modal_welcome"),welcome_texts,0,function(i){
+        selectbox = jQuery('#language_select', this).selectBoxIt({
+            theme: "bootstrap",
+            defaultText: "Sprache ...",
+            showFirstOption: false
+        });
+        jQuery(".infotext_container").mCustomScrollbar({
+            scrollButtons: {
+                enable: true
+            }
+        });
 
-            i-=1;
+        cycleText(jQuery("#modal_welcome"), welcome_texts, 0, function(i) {
+
+            i -= 1;
             jQuery("#language_selectSelectBoxItText").text(language_texts[i]);
-            jQuery("#language_selectSelectBoxItText").attr('data-val',language_texts[i]);
-       });
+            jQuery("#language_selectSelectBoxItText").attr('data-val', language_texts[i]);
+        });
 
-       cycleText(jQuery("#slogan_id"),slogan_texts,0);
+        cycleText(jQuery("#slogan_id"), slogan_texts, 0);
 
 
-       selectbox.on('open',function(){
-            if(jQuery('#welcome_modal').find('.modal-content').height()<340)  
-            jQuery('.findicators').hide();
-       });
+        selectbox.on('open', function() {
+            if (jQuery('#welcome_modal').find('.modal-content').height() < 340)
+                jQuery('.findicators').hide();
+        });
 
-       selectbox.on('close',function(){
+        selectbox.on('close', function() {
             jQuery('.findicators').show();
-       });
+        });
 
-       selectbox.on('change',function(){
+        selectbox.on('change', function() {
 
-        // var select_index =  jQuery('#language_selectSelectBoxItOptions').find(".active").attr('data-id');
-        var current_lang;
-        var idx = jQuery(this).val();
+            // var select_index =  jQuery('#language_selectSelectBoxItOptions').find(".active").attr('data-id');
+            var current_lang;
+            var idx = jQuery(this).val();
 
-        jQuery('#testdiv').hide();
+            jQuery('#testdiv').hide();
 
-        var select_index = 0;
-        select_index = languages.indexOf(idx);
-
-
-        current_language = select_index;
-
-        var clone_1;
-        var clone_2;
-
-        if(!break_cycle){
-
-        current_lang = jQuery("#modal_welcome").attr('lang_id');
-        if(current_lang==4)current_lang=0;    
-               
-        clone_1 = jQuery("#modal_welcome").clone().attr('id','modal_welcome_c');
-        clone_2 = jQuery("#slogan_id").clone().attr('id','slogan_id_c');    
-
-        jQuery("#modal_welcome").replaceWith(clone_1);
-        jQuery("#slogan_id").replaceWith(clone_2);
-
-    
-
-        break_cycle = true;
-
-        }
-
-        else{
-
-        clone_1 = jQuery('#modal_welcome_c');    
-        clone_2 = jQuery('#slogan_id_c');
-        current_lang = clone_1.attr('lang_id');
-
-        }
+            var select_index = 0;
+            select_index = languages.indexOf(idx);
 
 
-        if(select_index!=current_lang){
-            clone_1.animate({opacity:0},801);
-            clone_2.animate({opacity:0},801,function(){
+            current_language = select_index;
 
-            clone_1.text(welcome_texts[select_index]);
-            clone_2.text(slogan_texts[select_index]);
-            clone_1.animate({opacity:1},501);
-            clone_2.animate({opacity:1},501);
+            var clone_1;
+            var clone_2;
 
-            });
+            if (!break_cycle) {
 
-     }
+                current_lang = jQuery("#modal_welcome").attr('lang_id');
+                if (current_lang == 4) current_lang = 0;
 
-     else{
-        clone_1.css('opacity','1');
-        clone_2.css('opacity','1');
-        clone_1.text(welcome_texts[select_index]);
-        clone_2.text(slogan_texts[select_index]);
-     }
-    
-        clone_1.attr('lang_id',select_index);  
-        clone_2.attr('lang_id',select_index);  
-     
-   });
+                clone_1 = jQuery("#modal_welcome").clone().attr('id', 'modal_welcome_c');
+                clone_2 = jQuery("#slogan_id").clone().attr('id', 'slogan_id_c');
 
-   });
-  
-  jQuery('#welcome_modal').hammer().bind("swipeleft", function(e){
+                jQuery("#modal_welcome").replaceWith(clone_1);
+                jQuery("#slogan_id").replaceWith(clone_2);
 
-     if(jQuery(".active", e.target).index()==1 && selected_dialect){
-        jQuery('#welcome_modal').modal('hide');
-     
-    }
-    else{
-      if(current_language!=-1){
-     jQuery('#first_slider').carousel('next');
-     }
-     else{
-         openLanguageModal();
-     }    
-    }
+
+
+                break_cycle = true;
+
+            } else {
+
+                clone_1 = jQuery('#modal_welcome_c');
+                clone_2 = jQuery('#slogan_id_c');
+                current_lang = clone_1.attr('lang_id');
+
+            }
+
+
+            if (select_index != current_lang) {
+                clone_1.animate({
+                    opacity: 0
+                }, 801);
+                clone_2.animate({
+                    opacity: 0
+                }, 801, function() {
+
+                    clone_1.text(welcome_texts[select_index]);
+                    clone_2.text(slogan_texts[select_index]);
+                    clone_1.animate({
+                        opacity: 1
+                    }, 501);
+                    clone_2.animate({
+                        opacity: 1
+                    }, 501);
+
+                });
+
+            } else {
+                clone_1.css('opacity', '1');
+                clone_2.css('opacity', '1');
+                clone_1.text(welcome_texts[select_index]);
+                clone_2.text(slogan_texts[select_index]);
+            }
+
+            clone_1.attr('lang_id', select_index);
+            clone_2.attr('lang_id', select_index);
+
+        });
 
     });
 
-  jQuery('#welcome_modal').hammer().bind("swiperight", function(){
-    if(current_language!=-1){
-    jQuery('#first_slider').carousel('prev');
-    }
-       else{
-         openLanguageModal();
-     }  
+    jQuery('#welcome_modal').hammer().bind("swipeleft", function(e) {
 
-  }); 
+        if (jQuery(".active", e.target).index() == 1 && selected_dialect) {
+            jQuery('#welcome_modal').modal('hide');
 
+        } else {
+            if (current_language != -1) {
+                jQuery('#first_slider').carousel('next');
+            } else {
+                openLanguageModal();
+            }
+        }
 
-  jQuery('.switch_page_icon').on('click',function(){
-    if(current_language!=-1){
-    jQuery('#first_slider').carousel('next');
-    }
+    });
 
-    else{
-        openLanguageModal();
-    }
-  })
+    jQuery('#welcome_modal').hammer().bind("swiperight", function() {
+        if (current_language != -1) {
+            jQuery('#first_slider').carousel('prev');
+        } else {
+            openLanguageModal();
+        }
 
-    jQuery('.c-back-button').on('click',function(){
-    jQuery('#first_slider').carousel('prev');
-  })
-
-    jQuery('#first_slider').on('slide.bs.carousel', function (e) {
+    });
 
 
-     if(jQuery(".active", e.target).index()==0){
+    jQuery('.switch_page_icon').on('click', function() {
+        if (current_language != -1) {
+            jQuery('#first_slider').carousel('next');
+        } else {
+            openLanguageModal();
+        }
+    })
 
-        jQuery('.c-back-button').fadeIn('slow');
-        jQuery('.infotext_head').text(instruction_heads[current_language]);
-        jQuery(".text-left-span").text(instruction_texts[current_language]);
-        jQuery("#dialekt_span").text(the_word_dialect[current_language]);
-        jQuery("#go_span").text(go_texts[current_language]);
-        jQuery("#suggest_dialect_span").text(suggest_dialect_texts[current_language])
+    jQuery('.c-back-button').on('click', function() {
+        jQuery('#first_slider').carousel('prev');
+    })
 
-        jQuery("#data_remark").text(data_remark[current_language]);
+    jQuery('#first_slider').on('slide.bs.carousel', function(e) {
 
-        jQuery('#remark_link').attr('href',remark_link[current_language]);
 
-     }
+        if (jQuery(".active", e.target).index() == 0) {
 
-     else{
-       jQuery('.c-back-button').fadeOut('fast');
-     }
+            jQuery('.c-back-button').fadeIn('slow');
+            jQuery('.infotext_head').text(instruction_heads[current_language]);
+            jQuery(".text-left-span").text(instruction_texts[current_language]);
+            jQuery("#dialekt_span").text(the_word_dialect[current_language]);
+            jQuery("#go_span").text(go_texts[current_language]);
+            jQuery("#suggest_dialect_span").text(suggest_dialect_texts[current_language])
+
+            jQuery("#data_remark").text(data_remark[current_language]);
+
+            jQuery('#remark_link').attr('href', remark_link[current_language]);
+
+        } else {
+            jQuery('.c-back-button').fadeOut('fast');
+        }
     })
 
 
@@ -1196,7 +1227,7 @@ function initWelcomeModal(){
           }
         }
   })*/
-   
+
 
 
      jQuery('#start_tool').on('click',function(){
@@ -1216,7 +1247,7 @@ function initWelcomeModal(){
 
    jQuery('#custom_modal_backdrop').fadeOut(function(){jQuery(this).remove()});
 
-   if(selected_dialect !== ""){     
+   if(selected_dialect !== ""){
     startMainTool();
     //showCustomBackdrop();
    }else{
@@ -1229,11 +1260,11 @@ function initWelcomeModal(){
 
 /**
  * [handleWordSpanClick description]
- * 
+ *
  */
 function handleWordSpanClick(){
 
-    if(allow_select) { 
+    if(allow_select) {
 
 
     if(!jQuery('#concepts_modal').hasClass('fade')){
@@ -1245,7 +1276,7 @@ function handleWordSpanClick(){
               keyboard: false
             });
 
-    if(jQuery('#custom_modal_backdrop').length<1)showCustomModalBackdrop(); 
+    if(jQuery('#custom_modal_backdrop').length<1)showCustomModalBackdrop();
 
     }
 
@@ -1253,12 +1284,12 @@ function handleWordSpanClick(){
 
 /**
  * [handleLocationSpanClick description]
- * 
+ *
  */
 function handleLocationSpanClick(){
 
   if(allow_select){
-    
+
      if(!jQuery('#locations_modal').hasClass('fade')){
           jQuery('#locations_modal').css('opacity',"1");
           jQuery('#locations_modal').addClass('fade');
@@ -1266,16 +1297,16 @@ function handleLocationSpanClick(){
 
     jQuery('#locations_modal').modal({
         keyboard: false
-      }); 
+      });
 
-    if(jQuery('#custom_modal_backdrop').length<1)showCustomModalBackdrop();  
+    if(jQuery('#custom_modal_backdrop').length<1)showCustomModalBackdrop();
   }
 
-} 
+}
 
 /**
  * [menu_is_up description]
- * 
+ *
  */
 function menu_is_up() {
   startTutorial();
@@ -1296,44 +1327,13 @@ function menu_is_up() {
  * @return {Object}                   Indexed Array containing concept id and the concept in the current language.
  */
 function createConceptIndexList(concepts_cur_lang, concept_va_phase){
-var result = {};
-
-  /*phase1 = concepts_cur_lang.filter( function ( value, index ) { 
-                          return value.va_phase == 1 ? true : false;
-                  });
-
-    phase2= concepts_cur_lang.filter( function ( value, index ) { 
-                          return value.va_phase == 2 ? true : false;
-                  });
-
-for(var i=0;i<phase1.length;i++){
-      result[parseInt(phase1[i].id)] = {index:i,name:phase1[i].name, va_phase:phase1[i].va_phase};
-  }
-
-  for(var y=0;y<phase2.length;y++){
-      result[parseInt(phase2[y].id)] = {index:y,name:phase2[y].name, va_phase:phase2[y].va_phase};
-  }*/
-
-/*  for(var i=0;i<concepts_cur_lang.length;i++){
-    
-    if(concepts_cur_lang[i].va_phase == 1){
-      result[parseInt(concepts_cur_lang[i].id)] = {index:i,name:concepts_cur_lang[i].name, va_phase:concepts_cur_lang[i].va_phase};
-    }
-  }
-
-  for(var y=0;y<concepts_cur_lang.length;y++){
-    if(concepts_cur_lang[y].va_phase == 2){
-      result[parseInt(concepts_cur_lang[y].id)] = {index:y,name:concepts_cur_lang[y].name, va_phase:concepts_cur_lang[y].va_phase};
-    }
-  }*/
+  var result = {};
 
   for(var y=0;y<concepts_cur_lang.length;y++){
       result[parseInt(concepts_cur_lang[y].id)] = {index:y,name:concepts_cur_lang[y].name, va_phase:concept_va_phase};
-    
   }
 
- return result;
-
+  return result;
 }
 
 /**
@@ -1370,7 +1370,7 @@ var result = {};
 
 /**
  * Initializes the Popover Tutorials.
- * 
+ *
  */
 function startTutorial(){
 
@@ -1381,7 +1381,7 @@ jQuery('#location_span').popover('show');
 
 jQuery('.pop_location_span').parent().on('click',function(){
   handleLocationSpanClick();
-}).addClass('c_hover');  
+}).addClass('c_hover');
 
 
 
@@ -1389,7 +1389,7 @@ jQuery('.pop_location_span').parent().on('click',function(){
 
 /**
  * Opens Language Modal for the user to choose prefered language.
- * 
+ *
  */
 function openLanguageModal(){
 
@@ -1403,8 +1403,8 @@ function openLanguageModal(){
 function openDialectModal(){
       jQuery('#dialect_modal').modal({
                    keyboard: true
-      }); 
-      
+      });
+
     //if(jQuery('#custom_modal_backdrop').length<1)showCustomModalBackdrop();
       //jQuery('#custom_modal_backdrop').fadeOut();
 }
@@ -1420,33 +1420,48 @@ function getTableData(in_data,origin){
 
   var data = [];
 
+  for ( var i=0 ; i<in_data.length; i++ ) {
 
-        for ( var i=0 ; i<in_data.length; i++ ) {
+    if(origin=='dialect'){
+      var res = {name: in_data[i].name, id: in_data[i].id_dialect ,column1:{}};
+    }else if(origin=='concept'){
+       var res = {va_phase:in_data[i].va_phase ,column1:{}, concept_id: in_data[i].id, concept_name: in_data[i].name, qid:in_data[i].qid};
+       if(in_data[i].qid != 0 && in_data[i].qid != null ){
+         var wikidata_url = "https://www.wikidata.org/wiki/Q" + in_data[i].qid;
+         var wiki_el = '<div class="wiki_info"><div class="wikidata_container"><i title="Wikidata" class="fa fa-wikipedia-w wikidata_icon" href=" ' + wikidata_url + ' " aria-hidden="true"></i></div></div>';
+         // <i title="Wikidata" class="fa fa-wikipedia-w wikidata_icon" aria-hidden="true"></i>
+       }else{
+         var wiki_el = "";
+       }
 
-        if(origin=='dialect') var res = {name: in_data[i].name, id: in_data[i].id_dialect ,column1:{}};
-        else if(origin=='concept') var res = {va_phase:in_data[i].va_phase ,column1:{}, concept_id: in_data[i].id, concept_name: in_data[i].name};
-        else var res = {column1:{}};
+    }else{
+      var res = {column1:{}};
+    }
 
-        var name = in_data[i].name; 
-        var filtered_name = replaceSpecialChars(name);
-        if(filtered_name!=name)filtered_name+=" "+name;
-        else filtered_name = name;
+    var name = in_data[i].name;
+    var filtered_name = replaceSpecialChars(name);
 
+    if(filtered_name!=name){
+      filtered_name+=" "+name;
+    }else{
+      filtered_name = name;
+    }
 
-            if(origin=='concept' && i<important_concepts_count)res.column1.html='<div  title="'+name+'" class="dataparent"><span class="dataspan"><i title="'+important_concepts_texts[current_language]+'" class="fa fa-exclamation-triangle" aria-hidden="true"></i>'+in_data[i].name+'</span></div>';
-            else if(origin=='concept') res.column1.html='<div title="'+name+'" class="dataparent"><span class="dataspan">'+name+'</span></div>';
-            else if(origin=='dialect') res.column1.html='<div title="'+name+'" class="dataparent"><span class="dataspan">'+name+'</span></div>';
-            else res.column1.html='<div class="dataparent"><span title="'+name+'" class="dataspan">'+name+'</span></div>';
+    if(origin=='concept' && i<important_concepts_count){
+      res.column1.html='<div  title="'+name+'" class="dataparent"><span class="dataspan"><i title="'+important_concepts_texts[current_language]+'" class="fa fa-exclamation-triangle" aria-hidden="true"></i>'+in_data[i].name+'</span>' + wiki_el + '</div>';
+    }else if(origin=='concept'){
+        res.column1.html='<div title="'+name+'" class="dataparent"><span class="dataspan">'+name+'</span>' + wiki_el + '</div>';
+    }else if(origin=='dialect'){
+      res.column1.html='<div title="'+name+'" class="dataparent"><span class="dataspan">'+name+'</span></div>';
+    } else {
+      res.column1.html='<div class="dataparent"><span title="'+name+'" class="dataspan">'+name+'</span></div>';
+    }
 
-            res.column1.filtered_name = filtered_name;
-            data.push(res);
-        }
+    res.column1.filtered_name = filtered_name;
+    data.push(res);
+  }
 
-        /*just testing adding a row in dataTable concepts*/
-       // if(origin=='concept') data.push({va_phase:2 ,column1:{html:'<div title="'+"ZZZ"+'" class="dataparent"><span class="dataspan">'+"A1111"+'</span></div>',filtered_name:"ZZZ"}});
-
-   return data;     
-
+   return data;
 }
 
 
@@ -1466,7 +1481,7 @@ function addModalListeners(){
       jQuery('#concepts_modal').modal('hide');
       jQuery('#custom_modal_backdrop').fadeOut(function(){jQuery(this).remove()})
   })
- 
+
    jQuery('#image_modal .customclose').on('click',function(){
       jQuery('#image_modal').modal('hide');
   })
@@ -1477,7 +1492,7 @@ function addModalListeners(){
 
       jQuery('#language_modal .customclose').on('click',function(){
       jQuery('#language_modal').modal('hide');
-  })  
+  })
 
       jQuery('#register_modal .customclose').on('click',function(){
       jQuery('#register_modal').modal('hide');
@@ -1486,15 +1501,15 @@ function addModalListeners(){
 
       jQuery('#location_list_modal .customclose').on('click',function(){
       jQuery('#location_list_modal').modal('hide');
-  })  
+  })
 
  jQuery('#input_modal .customclose').on('click',function(){
       jQuery('#input_modal').modal('hide');
-  }) 
+  })
 
     jQuery('#editInput_modal .customclose').on('click',function(){
       jQuery('#editInput_modal').modal('hide');
-  }) 
+  })
 
   jQuery('#image_modal').hammer().bind("swipeleft", function(e){
      jQuery('#image_slider').carousel('next');
@@ -1514,12 +1529,12 @@ function addModalListeners(){
 
        jQuery('#toplistmodal .customclose').on('click',function(){
       jQuery('#toplistmodal').modal('hide');
-  })  
+  })
 
   jQuery('#why_register_modal .customclose').on('click',function(){
       prevent_backdrop=false;
       jQuery('#why_register_modal').modal('hide');
-  })  
+  })
 
   jQuery('#dialect_modal .customclose').on('click',function(){
       jQuery('#dialect_modal').modal('hide');
@@ -1535,7 +1550,7 @@ function addModalListeners(){
       jQuery('#register_modal').modal();
     },'#register_modal')
   })
-  
+
  /* jQuery('#open_login_modal').on('click',function(){
       jQuery('register_modal').modal();
   })  */
@@ -1547,7 +1562,7 @@ function addModalListeners(){
 
 /**
  * [bindShowListeners_Modal description]
- * 
+ *
  */
 function bindShowListeners_Modal(){
 
@@ -1566,7 +1581,7 @@ function bindShowListeners_Modal(){
   jQuery('#dialect_modal').on('shown.bs.modal',function(){
 
     if(dialect_modal_initialized){
-    
+
     if(datatable_dialects && (current_dialect_index != -1)){
               datatable_dialects.row(current_dialect_index).scrollTo();
     }
@@ -1584,24 +1599,24 @@ function bindShowListeners_Modal(){
 
        displayTooltips(false);
        if(process_restarted){ closeAllInfoWindows();process_restarted=false;}
-      
+
        if(saved_location_index!=-1){
         datatable_dialects.row(saved_location_index).scrollTo();
        }
 
      }else{
-        datatable_dialects = create_dialect_list_modal(jQuery('#dialect_modal'),dialect_data); 
-  
-      jQuery('[data-toggle="tooltip"]').tooltip();
-    
+        datatable_dialects = create_dialect_list_modal(jQuery('#dialect_modal'),dialect_data);
 
-      var modal = jQuery(this);                         
-      var oldheight = modal.find('.dataTables_scroll').height();                                    
+      jQuery('[data-toggle="tooltip"]').tooltip();
+
+
+      var modal = jQuery(this);
+      var oldheight = modal.find('.dataTables_scroll').height();
          modal.find('input').on('input',function (){
          var height =  modal.find('.dataTables_scroll').height()
           if(oldheight!=height) {
                 datatable_dialects.scroller.measure();oldheight=height;
-            } 
+            }
           })
      }
   })  */
@@ -1630,57 +1645,66 @@ function bindShowListeners_Modal(){
    })
 
 
-    jQuery('#concepts_modal').on('shown.bs.modal', function (e) {
+    jQuery('#concepts_modal').on('shown.bs.modal', function(e) {
 
-     if(modals_initialized){
+    if (modals_initialized) {
       datatable_concepts.scroller.measure();
       setTimeout(function() {
         datatable_concepts.scroller.measure();
       }, 10);
       displayTooltips(false);
-      if(process_restarted){closeAllInfoWindows();process_restarted=false;}
+      if (process_restarted) {
+        closeAllInfoWindows();
+        process_restarted = false;
+      }
       do_image_modal = false;
 
-      if(current_concept_index[va_phase]!=-1){
-        datatable_concepts.row(current_concept_index[va_phase]).scrollTo();
+      // if (current_concept_index[va_phase] != -1 && jQuery('#va_phase_wrapper_concept_list').find('.va_phase_' + va_phase).hasClass("active")) {
+      //   datatable_concepts.row(current_concept_index[va_phase]).scrollTo();
+      //   selectTableEntry(current_concept_index[va_phase]);
+      // }
+      if (current_concept_index != -1 && jQuery('#va_phase_wrapper_concept_list').find('.va_phase_' + va_phase).hasClass("active")) {
+        datatable_concepts.row(current_concept_index).scrollTo();
+        selectTableEntry(current_concept_index);
       }
+      // checkEnteredConcepts_indexed();
+    }
 
-    
+    jQuery(".wikidata_icon").off("click");
+    jQuery(".wikidata_icon").on('click', function(e) {
+      e.stopPropagation();
+      console.log("OPEN WIKI TAB");
+      window.open(jQuery(this).attr('href'), '_blank');
+    });
 
-     }
-
-   })
+  })
 
 jQuery('#concepts_modal').on('show.bs.modal', function (e) {
-    // if(current_language == 1){
-    //       console.log("french");
-    //       jQuery('#concepts_modal').find('#va_phase_wrapper').addClass('french_va');
-    // }
 
     switch(current_language){
         case 0:
-          jQuery('#concepts_modal').find('#va_phase_wrapper').addClass('german_va');
+          jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('german_va');
         break;
         case 1:
-          jQuery('#concepts_modal').find('#va_phase_wrapper').addClass('french_va');
+          jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('french_va');
         break;
         case 2:
-          jQuery('#concepts_modal').find('#va_phase_wrapper').addClass('italian_va');
+          jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('italian_va');
         break;
         case 3:
-          jQuery('#concepts_modal').find('#va_phase_wrapper').addClass('slovenian_va');
+          jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('slovenian_va');
         break;
       }
 
 })
 
      jQuery('#image_modal').on('shown.bs.modal', function (e) {
-     
+
       setTimeout(function() {
 
           jQuery('#image_modal').find('#image_slider').carousel({
                 interval: 3500
-        })    
+        })
 
       setDynamicContent('image');
       }, 10);
@@ -1688,7 +1712,7 @@ jQuery('#concepts_modal').on('show.bs.modal', function (e) {
 
       jQuery('#locations_modal').on('hidden.bs.modal', function () {
 
-         setTimeout(function() {displayTooltips(true);}, 200);  
+         setTimeout(function() {displayTooltips(true);}, 200);
          if(tutorial_running)showPopUp();
          jQuery('#custom_modal_backdrop').fadeOut(function(){jQuery(this).remove()})
       })
@@ -1696,13 +1720,13 @@ jQuery('#concepts_modal').on('show.bs.modal', function (e) {
 
       jQuery('#concepts_modal').on('hidden.bs.modal', function () {
 
-       if(do_image_modal)jQuery('#image_modal').modal({});  
+       if(do_image_modal)jQuery('#image_modal').modal({});
 
        if(!prevent_backdrop){
-       setTimeout(function() {displayTooltips(true);}, 200); 
+       setTimeout(function() {displayTooltips(true);}, 200);
        if(tutorial_running)showPopUp();
        jQuery('#custom_modal_backdrop').fadeOut(function(){jQuery(this).remove()})
-       }  
+       }
 
       })
 
@@ -1746,7 +1770,7 @@ jQuery('#concepts_modal').on('show.bs.modal', function (e) {
     jQuery('#register_modal').on('hidden.bs.modal', function (e) {
       jQuery('.send_anonymous_btn').popover('dispose');
       displayTooltips(true);
-      jQuery('#custom_modal_backdrop').fadeOut(function(){jQuery(this).remove()})  
+      jQuery('#custom_modal_backdrop').fadeOut(function(){jQuery(this).remove()})
       jQuery('#anonymous_data_slide').removeClass('active');
     })
 
@@ -1767,15 +1791,15 @@ jQuery('#concepts_modal').on('show.bs.modal', function (e) {
 
     jQuery('#welcomeback_modal').on('shown.bs.modal', function (e) {
 
-      setTimeout(function() {jQuery('#custom_backdrop i').css('top','-150px');         
+      setTimeout(function() {jQuery('#custom_backdrop i').css('top','-150px');
         startMainTool();
       }, 200);
-      
+
     })
 
     jQuery('#welcome_modal').on('shown.bs.modal', function (e) {
-      jQuery('#custom_backdrop').fadeOut('slow',function(){jQuery(this).remove();});   
-      
+      jQuery('#custom_backdrop').fadeOut('slow',function(){jQuery(this).remove();});
+
     })
 
 
@@ -1784,21 +1808,21 @@ jQuery('#concepts_modal').on('show.bs.modal', function (e) {
 
       // if(current_language == 1){
       //     console.log("french");
-          
+
       // }
 
       switch(current_language){
         case 0:
-          jQuery('#location_list_modal').find('#va_phase_wrapper').addClass('german_va');
+          jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('german_va');
         break;
         case 1:
-          jQuery('#location_list_modal').find('#va_phase_wrapper').addClass('french_va');
+          jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('french_va');
         break;
         case 2:
-          jQuery('#location_list_modal').find('#va_phase_wrapper').addClass('italian_va');
+          jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('italian_va');
         break;
         case 3:
-          jQuery('#location_list_modal').find('#va_phase_wrapper').addClass('slovenian_va');
+          jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('slovenian_va');
         break;
       }
 
@@ -1810,16 +1834,16 @@ jQuery('#concepts_modal').on('show.bs.modal', function (e) {
         current_location_list_table.scroller.measure();
         current_location_list_table.columns.adjust();
 
-        
+
     })
 
 
      jQuery('#location_list_modal').on('hidden.bs.modal', function () {
 
-     setTimeout(function() {displayTooltips(true);}, 200);  
+     setTimeout(function() {displayTooltips(true);}, 200);
      if(tutorial_running)showPopUp();
      jQuery('#custom_modal_backdrop').fadeOut(function(){jQuery(this).remove()})
-     if(do_image_modal)jQuery('#image_modal').modal({});  
+     if(do_image_modal)jQuery('#image_modal').modal({});
   })
 
 
@@ -1833,7 +1857,7 @@ jQuery('#concepts_modal').on('show.bs.modal', function (e) {
     })
 
      jQuery('#toplistmodal').on('hidden.bs.modal', function (e) {
-      jQuery('#custom_modal_backdrop').fadeOut(function(){jQuery(this).remove()})  
+      jQuery('#custom_modal_backdrop').fadeOut(function(){jQuery(this).remove()})
       displayTooltips(true);
     })
 
@@ -1865,8 +1889,8 @@ jQuery('#concepts_modal').on('show.bs.modal', function (e) {
           showCustomModalBackdrop();
           displayTooltips(false);
         }
-        })  
-        
+        })
+
 
     jQuery('#why_register_modal').on('hidden.bs.modal', function (e) {
       if(!prevent_backdrop){
@@ -1896,13 +1920,13 @@ jQuery('#concepts_modal').on('show.bs.modal', function (e) {
 function buildTable(list){
 console.log(list.length);
 
-var result = jQuery('<tbody>'); 
-   
+var result = jQuery('<tbody>');
+
   for(var i=0;i<list.length;i++){
       var tr = jQuery('<tr></tr>');
       tr.attr('ref_id',list[i]['id']);
       tr.append(jQuery('<td>'+list[i]['name']+'</td>'));
-      result.append(tr);              
+      result.append(tr);
   }
 
 return result;
@@ -1914,7 +1938,7 @@ return result;
  * @param  {HTML} modal  [description]
  * @param  {Array} data   [description]
  * @param  {String} origin [description]
- * 
+ *
  */
 function createLocationListModal(modal,data,origin) {
 // used only for locations modal list
@@ -1927,7 +1951,7 @@ var emptyTable;
 
 id = "#location_modal_table";
 scrollY= "76vh";
-emptyTable = search_for_location[current_language]; 
+emptyTable = search_for_location[current_language];
 
 
 
@@ -1939,7 +1963,7 @@ var table = modal.find(id).DataTable(
             { data: {
                 _:    "column1.html",
                 filter: "column1.filtered_name"
-            } 
+            }
           },
         ],
 
@@ -1962,9 +1986,9 @@ var table = modal.find(id).DataTable(
 
      fnInitComplete: function(settings) {
 
-            
 
-            
+
+
 
              var input =  modal.find('input');
              if(origin=='location'){input.attr('autofocus',"");input.attr('id','focusinput');} //id for js call in bind show listeners
@@ -1975,17 +1999,17 @@ var table = modal.find(id).DataTable(
                if(!modals_initialized && origin=="location"){
 
                 buttonparent = jQuery('<div class="list_modal_button_parent"></div>');
-                jQuery('#location_modal_table_filter').after(buttonparent);    
+                jQuery('#location_modal_table_filter').after(buttonparent);
 
                 var search_location_button = jQuery('<div class="list_modal_button_in_search"><i class="fa fa-map-marker" aria-hidden="true"></i> '+search_map_location[current_language]+'</div>');
                 buttonparent.append(search_location_button);
 
 
                 search_location_button.on('click',function(){
-                  init_location_search_mode(modal);           
+                  init_location_search_mode(modal);
                 });
 
-               }  
+               }
 
 
 
@@ -1994,15 +2018,15 @@ var table = modal.find(id).DataTable(
                 if(table.page.info().recordsDisplay !== 0){
 
                    var index  = table.row(this).index()
-                  
-                    
+
+
 
                   if(origin=="concept"){
-                
-                  }else{ 
+
+                  }else{
                     location_selected = true;
                     if(url_concept_id){
-                      concept_selected = true; 
+                      concept_selected = true;
                     }
 
                     var name = locations[index].name;
@@ -2022,11 +2046,11 @@ var table = modal.find(id).DataTable(
                     if(saved_location_index!=-1 && saved_location_index!=index){
 
                        var row = table.row(saved_location_index).node();
-                       jQuery(row).removeClass('green_row'); 
+                       jQuery(row).removeClass('green_row');
                        jQuery(row).find('.fa-check').remove();
-                    } 
+                    }
 
-                    saved_location_index = index; 
+                    saved_location_index = index;
                     saved_location_name = name;
 
 
@@ -2036,13 +2060,13 @@ var table = modal.find(id).DataTable(
                     setDynamicContent('list'); // for offset since hight of left menu could change
 
                     /*Show Gemeinde Grenzen*/
-                 
-                  jQuery('#image_modal').modal('hide'); 
+
+                  jQuery('#image_modal').modal('hide');
                   var g_location = name;
                   var g_location_id = id;
 
                   var index = contains.call(existingLocations,g_location_id);
-                  
+
                   showPolygon(g_location,g_location_id, true);
                   remove_location_search_listener();
                   /*END*/
@@ -2050,8 +2074,8 @@ var table = modal.find(id).DataTable(
 
               setTimeout(function() {modal.modal('hide');}, 220); //delay to show select effect
             }else if(origin == "location" /*&& !choosing_location_mode*/){/*when the location dataTable is empty - let user choose a Gemeinde*/
-                init_location_search_mode(modal); 
-                
+                init_location_search_mode(modal);
+
             }
 
           });
@@ -2060,31 +2084,31 @@ var table = modal.find(id).DataTable(
 
 
                 setTimeout(function() {modal.modal('hide');}, 1); //for closing modal on init
-      
+
                   locations_modal_modals_initialized =true;
-                  
+
 
                   if(locations_modal_modals_initialized&&concepts_modal_initialized){
                     modals_initialized=true;
-                    
-                    if(language_is_set)jQuery('#welcomeback_modal').modal('hide');            
-                  } 
-                
-          }  
+
+                    if(language_is_set)jQuery('#welcomeback_modal').modal('hide');
+                  }
+
+          }
 
         }
-    } 
+    }
   );
-  
-  
+
+
   if(origin!="concept"){
 
   table.on('draw.dt', function () {
 
    // console.log("DRAW");
-      
+
       if(jQuery('#locations_modal .dataTables_empty').length>0){
-         
+
                   jQuery('#locations_modal .dataTables_empty').css('white-space','normal');
                   jQuery('#locations_modal .dataTables_scrollBody').css('overflow','hidden');
                   jQuery('#locations_modal .dataTables_scrollBody').css('min-height','88px');
@@ -2102,289 +2126,319 @@ var table = modal.find(id).DataTable(
  }
 
  return table;
-                 
+
 }
 
 
-function createConceptsListModal(modal,data,origin) {
+function createConceptsListModal(modal, data, origin) {
 
-var id;
-var scrollY;
-var emptyTable;
+  var id;
+  var scrollY;
+  var emptyTable;
 
-if(origin=="concept"){
-  id = "#concept_modal_table";
-  scrollY= "76vh";
-  emptyTable = no_results_data_table[current_language];
-}
+  if (origin == "concept") {
+    id = "#concept_modal_table";
+    scrollY = "76vh";
+    emptyTable = no_results_data_table[current_language];
+  }
 
 
 
-var table = modal.find(id).DataTable(
-      {
+  var table = modal.find(id).DataTable({
 
-        data:data,
-        columns: [
-            { data: {
-                _:    "column1.html",
-                filter: "column1.filtered_name"
-            }
-          },
-        ],
+    data: data,
+    columns: [{
+      data: {
+        _: "column1.html",
+        filter: "column1.filtered_name"
+      }
+    }, ],
 
-      deferRender:    false,  //otherwise .node() won't always work
-      scrollY:        scrollY,
-      scrollX: false,
-      scrollCollapse: true,
-      info:false,
-      ordering : false,
+    deferRender: false, //otherwise .node() won't always work
+    scrollY: scrollY,
+    scrollX: false,
+    scrollCollapse: true,
+    info: false,
+    ordering: false,
 
-       scroller: {
-       displayBuffer: 16,
+    scroller: {
+      displayBuffer: 16,
     },
-    language:{
-        zeroRecords: emptyTable
+    language: {
+      zeroRecords: emptyTable
     },
 
 
-     fnInitComplete: function(settings) {
+    fnInitComplete: function(settings) {
 
-             var input =  modal.find('input');
-             if(origin=='location'){input.attr('autofocus',"");input.attr('id','focusinput');} //id for js call in bind show listeners
-             input.attr('autocomplete',"off");
+      var input = modal.find('input');
+      if (origin == 'location') {
+        input.attr('autofocus', "");
+        input.attr('id', 'focusinput');
+      } //id for js call in bind show listeners
+      input.attr('autocomplete', "off");
 
-             var buttonparent;
+      var buttonparent;
 
-               if(!modals_initialized && origin=="concept") {
+      if (!modals_initialized && origin == "concept") {
 
-                buttonparent = jQuery('<div class="list_modal_button_parent"></div>');
-                jQuery('#concept_modal_table_filter').after(buttonparent);    
+        buttonparent = jQuery('<div class="list_modal_button_parent"></div>');
+        jQuery('#concept_modal_table_filter').after(buttonparent);
 
-                var random_button = jQuery('<div class="list_modal_button_in_search"><i class="fa fa-random" aria-hidden="true"></i> '+random_texts[current_language]+'</div>');
-                buttonparent.append(random_button);
+        var random_button = jQuery('<div class="list_modal_button_in_search"><i class="fa fa-random" aria-hidden="true"></i> ' + random_texts[current_language] + '</div>');
+        buttonparent.append(random_button);
 
-                  /*button for choosing random concept*/
-                  random_button.on('click',function(){
+        /*button for choosing random concept*/
+        random_button.on('click', function() {
 
-                    if(!prevent_randomclick)  {
-                           do_image_modal = false;
-                           prevent_randomclick = true;
-                           if(jQuery('#concepts_modal').find('input').val()!="")datatable_concepts.search('').columns().search('').draw();
-                           var rnd_idx = getRandomUnAnsweredConceptIndex();
-                           
-                           datatable_concepts.row(rnd_idx).scrollTo();
-                           deSelectTableEntry(current_concept_index[va_phase]);
-                           selectTableEntry(rnd_idx);
-                           current_concept_index[va_phase] = rnd_idx;
+          if (!prevent_randomclick) {
+            do_image_modal = false;
+            prevent_randomclick = true;
+            if (jQuery('#concepts_modal').find('input').val() != "") datatable_concepts.search('').columns().search('').draw();
+            var rnd_idx = getRandomUnAnsweredConceptIndex();
 
-                              var name = concepts_cur_lang[rnd_idx].name; 
-                              concept_selected = true;  
-                              var id= concepts_cur_lang[rnd_idx].id; 
+            datatable_concepts.row(rnd_idx).scrollTo();
+            // deSelectTableEntry(current_concept_index[va_phase]);
+            deSelectTableEntry(current_concept_index);
+            selectTableEntry(rnd_idx);
+            // current_concept_index[va_phase] = rnd_idx;
+            current_concept_index = rnd_idx;
 
-                               jQuery('#word_span').text(name);
-                               jQuery('#word_span').attr("data-id_concept",id);
-                               jQuery('#word_span').attr("data-id_concept_index",rnd_idx);
-                               setDynamicContent('list');
-                               if(!jQuery('#why_register_modal').hasClass('in'))checkImageModal(id,name);
+            var name = concepts_cur_lang[rnd_idx].name;
+            concept_selected = true;
+            var id = concepts_cur_lang[rnd_idx].id;
 
-                           setTimeout(function() {prevent_randomclick=false}, 500);
+            jQuery('#word_span').text(name);
+            jQuery('#word_span').attr("data-id_concept", id);
+            jQuery('#word_span').attr("data-id_concept_index", rnd_idx);
+            setDynamicContent('list');
+            if (!jQuery('#why_register_modal').hasClass('in')) checkImageModal(id, name);
+
+            setTimeout(function() {
+              prevent_randomclick = false
+            }, 500);
 
 
-                      }
-                    })
+          }
+        })
 
-                  /*button for suggesting new concepts*/
-                  var suggest_button = jQuery('<div class="list_modal_button_in_search"><i class="fa fa-plus" aria-hidden="true"></i> '+suggest_texts[current_language]+'</div>');
-                  buttonparent.append(suggest_button);
-                  if(!userLoggedIn)suggest_button.addClass('disabled_feature');
+        /*button for suggesting new concepts*/
+        var suggest_button = jQuery('<div class="list_modal_button_in_search"><i class="fa fa-plus" aria-hidden="true"></i> ' + suggest_texts[current_language] + '</div>');
+        buttonparent.append(suggest_button);
+        if (!userLoggedIn) suggest_button.addClass('disabled_feature');
 
-                  suggest_button.on('click',function(){
-                    if(!userLoggedIn){
-                         prevent_backdrop=true;
-                         jQuery('#concepts_modal').modal('hide');
-                         openWhyRegisterModal();
-                    }else{
+        suggest_button.on('click', function() {
+          if (!userLoggedIn) {
+            prevent_backdrop = true;
+            jQuery('#concepts_modal').modal('hide');
+            openWhyRegisterModal();
+          } else {
+            jQuery('.input_modal_content').empty();
+            var suggest_headline = jQuery('<div class="suggest_headline">' + suggest_texts[current_language] + ':</div>');
+            var suggest_field = jQuery('<input class="suggest_field"></input>');
+            var suggest_button_submit = jQuery('<div class="suggest_button_submit suggest_btn">' + submit_texts[current_language] + '</div>');
+            var feedback_div = jQuery('<div class="feedback_suggest">' + feedback_texts[current_language] + '</div>');
+            jQuery('.input_modal_content').append(suggest_headline).append(suggest_field).append(suggest_button_submit);
 
-                         jQuery('.input_modal_content').empty();
-                           var suggest_headline = jQuery('<div class="suggest_headline">'+suggest_texts[current_language]+':</div>');
-                           var suggest_field = jQuery('<input class="suggest_field"></input>');
-                           var suggest_button_submit = jQuery('<div class="suggest_button_submit suggest_btn">'+submit_texts[current_language]+'</div>');
-                           var feedback_div = jQuery('<div class="feedback_suggest">'+feedback_texts[current_language]+'</div>');
-                         jQuery('.input_modal_content').append(suggest_headline).append(suggest_field).append(suggest_button_submit);
+            jQuery('#input_modal').modal();
 
-                         jQuery('#input_modal').modal();
+            suggest_button_submit.off().on('click', function() {
+              if (suggest_field.val() == "") {
+                markInputRed(suggest_field);
+              } else {
+                sendSuggestEmail(suggest_field.val(), function() {
+                  suggest_button_submit.fadeOut('fast', function() {
+                    jQuery('.input_modal_content').append(feedback_div);
+                    feedback_div.fadeIn('fast');
 
-                         suggest_button_submit.off().on('click',function(){
-
-                          if(suggest_field.val()==""){
-                            markInputRed(suggest_field);
-                          }else{
-
-                            sendSuggestEmail(suggest_field.val(),function(){
-                                 
-                              suggest_button_submit.fadeOut('fast',function(){
-                                jQuery('.input_modal_content').append(feedback_div);  
-                                feedback_div.fadeIn('fast');
-
-                                setTimeout(function() {
-                                   jQuery('#input_modal').modal('hide');
-                                       jQuery('.input_modal_content').empty();
-                                }, 1500);
-
-                              })  
-                            })  
-                          }
-                          
-                         })
-
-                       
-                    }     
+                    setTimeout(function() {
+                      jQuery('#input_modal').modal('hide');
+                      jQuery('.input_modal_content').empty();
+                    }, 1500);
 
                   })
-                  
-                /*change va_phase concepte*/
-                var alm = jQuery('<div class="list_modal_button_va_phase va_phase_1 active" style="background-color:#4286f4;" data-va_phase = "1">'+ alpine_agriculture[current_language]+'</div>'); // 'Almwirtschaft'
-                var natur = jQuery('<div class="list_modal_button_va_phase va_phase_2" style="background-color:#4CAF50;"  data-va_phase = "2">'+alpine_nature[current_language]+'</div>'); // 'Natur'
-
-                var va_phase_wrapper = jQuery('<div id="va_phase_wrapper"></div>');
-
-                va_phase_wrapper.append(alm);
-                va_phase_wrapper.append(natur);
-                //jQuery('#concepts_modal').children().prepend(va_phase_wrapper);
-
-                jQuery('#concepts_modal').children().find('.modal-content').append(va_phase_wrapper);
-                
-    
-
-                jQuery('.list_modal_button_va_phase').on('click', function(){
-                  
-
-                var selected_va_phase = jQuery(this).data('va_phase');
-                
-                if(va_phase != selected_va_phase){
-                  va_phase = selected_va_phase;
-                   
-                   
-                  switch(selected_va_phase){
-                    case 1: 
-                      //console.log(filtered_data_phase1);
-                     // setTimeout(function() {
-                      table.clear().draw();
-                      table.rows.add(filtered_data_phase1); // Add new data
-                      table.search('');
-                      
-                      table.columns.adjust().draw(); // Redraw the DataTable
-
-                      table.scroller.measure();
-                      table.columns.adjust();
-                     // }, 220);
-
-                      jQuery('.va_phase_1').addClass('active');
-                      jQuery('.va_phase_2').removeClass('active');
-
-                      checkEnteredConcepts_indexed();
-
-                    break;
-
-                    case 2:
-                      //console.log(filtered_data_phase2);
-                      //setTimeout(function() {
-                       table.clear().draw();
-                       table.rows.add(filtered_data_phase2); // Add new data
-                       table.search('');
-                       
-                       table.columns.adjust().draw(); // Redraw the DataTable
-
-                       table.scroller.measure();
-                       table.columns.adjust();
-
-                       checkEnteredConcepts_indexed();
-
-                       jQuery('.va_phase_1').removeClass('active');
-                       jQuery('.va_phase_2').addClass('active');
-
-                    //  }, 220);
-                    break;
-                    
-                    default: 
-                    
-                    
-                  }
-                }
-
                 })
+              }
+            })
+          }
+        })
+
+        /*change va_phase concepte*/
+        var alm = jQuery('<div class="list_modal_button_va_phase va_phase_1 active" data-va_phase = "1">' + alpine_agriculture[current_language] + '</div>'); // 'Almwirtschaft'
+        var natur = jQuery('<div class="list_modal_button_va_phase va_phase_2 active" data-va_phase = "2">' + alpine_nature[current_language] + '</div>'); // 'Natur'
+
+        jQuery("#va_phase_wrapper_concept_list").remove();
+        var va_phase_wrapper = jQuery('<div id="va_phase_wrapper_concept_list" class="va_phase_wrapper"></div>');
+
+        va_phase_wrapper.append(alm);
+        va_phase_wrapper.append(natur);
+        //jQuery('#concepts_modal').children().prepend(va_phase_wrapper);
+
+        jQuery('#concepts_modal').children().find('.modal-content').append(va_phase_wrapper);
+
+        jQuery("#va_phase_wrapper_concept_list").find('.list_modal_button_va_phase').on('click', function() {
+          var selected_va_phase = jQuery(this).data('va_phase');
+          console.log("CLICKED VA_PHASE: " + selected_va_phase);
+
+          //ALTERNATIVE VA PHASE SWITCH (CHECKBOX STYLE)
+          switch (selected_va_phase) {
+            case 1:
+              current_concept_index = -1;
+              if(jQuery("#va_phase_wrapper_concept_list").find('.va_phase_1').hasClass('active')){
+                jQuery("#va_phase_wrapper_concept_list").find('.va_phase_1').removeClass('active');
+              }else{
+                jQuery("#va_phase_wrapper_concept_list").find('.va_phase_1').addClass('active');
+                va_phase = 1;
+              }
+              break;
+            case 2:
+              current_concept_index = -1;
+              if(jQuery("#va_phase_wrapper_concept_list").find('.va_phase_2').hasClass('active')){
+                jQuery("#va_phase_wrapper_concept_list").find('.va_phase_2').removeClass('active');
+              }else{
+                jQuery("#va_phase_wrapper_concept_list").find('.va_phase_2').addClass('active');
+                va_phase = 2;
+              }
+              break;
+          }
 
 
 
-               }
-
-
-
-              modal.find('tbody').on('click', 'tr', function () {
-                /*prevents error if user clicks on an empty data table*/
-                if(table.page.info().recordsDisplay !== 0){
-
-                  var index  = table.row(this).index();
-                 
-                    
-                  var row_data = table.row(this).data();
-                  if(origin=="concept"){
-                 
-
-                   var name = row_data.concept_name;//concepts_cur_lang[index].name; 
-                   
-                   concept_selected = true;  
-                   var id= row_data.concept_id;//concepts_cur_lang[index].id; 
-
-                   if(current_concept_index[va_phase]!=-1) deSelectTableEntry(current_concept_index[va_phase]);
-                   selectTableEntry(index);
-
-
-                    current_concept_index[va_phase] = index;
-        
-           
-                    jQuery('#image_modal').modal('hide');
-
-                    jQuery('#word_span').text(name);
-                    jQuery('#word_span').attr("data-id_concept",id);
-                    jQuery('#word_span').attr("data-id_concept_index",index);
-                    setDynamicContent('list'); // for offset since hight of left menu could change
-
-                    checkImageModal(id,name);
-                    jQuery('#custom_modal_backdrop').fadeOut(function(){jQuery(this).remove()});
-
-                    /*END*/
-                    remove_location_search_listener();
-                  }
-
-
-              setTimeout(function() {modal.modal('hide');}, 220); //delay to show select effect
+          active_va_phases  = check_active_concepts(jQuery('#va_phase_wrapper_concept_list').find('.active'));
+          table.clear().draw();
+          console.log(active_va_phases);
+          if(active_va_phases.length == 2){
+            table.rows.add( filtered_data_phases[0] );
+          }else if(active_va_phases.length > 0){
+            for (var i = 0; i < active_va_phases.length; i++) {
+              table.rows.add( filtered_data_phases[active_va_phases[i]] );
             }
+          }else{
+            table.rows.add([]);
+          }
+
+          // if (current_concept_index[va_phase] != -1 && jQuery('#va_phase_wrapper_concept_list').find('.va_phase_' + va_phase).hasClass("active")) {
+          //   datatable_concepts.row(current_concept_index[va_phase]).scrollTo();
+          //   selectTableEntry(current_concept_index[va_phase]);
+          // }
+          if (current_concept_index != -1 && jQuery('#va_phase_wrapper_concept_list').find('.va_phase_' + va_phase).hasClass("active")) {
+            datatable_concepts.row(current_concept_index).scrollTo();
+            selectTableEntry(current_concept_index);
+          }
+
+          checkEnteredConcepts_indexed();
+
+          table.columns.adjust().draw(); // Redraw the DataTable
+
+          table.scroller.measure();
+          table.columns.adjust();
+
+          jQuery(".wikidata_icon").off("click");
+          jQuery(".wikidata_icon").on('click', function(e) {
+            e.stopPropagation();
+            console.log("OPEN WIKI TAB");
+            window.open(jQuery(this).attr('href'), '_blank');
           });
-          if(!modals_initialized){
+
+        })
+
+      }
+
+      jQuery(".wikidata_icon").off("click");
+      jQuery(".wikidata_icon").on('click', function(e) {
+        e.stopPropagation();
+        console.log("OPEN WIKI TAB");
+        window.open(jQuery(this).attr('href'), '_blank');
+      });
+
+      modal.find('tbody').on('click', 'tr', function() {
+        console.log("SELECT CONCEPT");
+
+        /*prevents error if user clicks on an empty data table*/
+        if (table.page.info().recordsDisplay !== 0) {
+
+          var index = table.row(this).index();
 
 
+          var row_data = table.row(this).data();
+          if (origin == "concept") {
 
-                setTimeout(function() {modal.modal('hide');}, 1); //for closing modal on init
-      
-                  concepts_modal_initialized = true;
 
-                  if(locations_modal_modals_initialized&&concepts_modal_initialized){
-                    modals_initialized=true;
-                    
-                    if(language_is_set)jQuery('#welcomeback_modal').modal('hide');            
-                  } 
-                
-          }  
+            var name = row_data.concept_name; //concepts_cur_lang[index].name;
 
+            concept_selected = true;
+            var id = row_data.concept_id; //concepts_cur_lang[index].id;
+
+            // if (current_concept_index[va_phase] != -1) deSelectTableEntry(current_concept_index[va_phase]);
+            if (current_concept_index != -1) deSelectTableEntry(current_concept_index);
+
+            selectTableEntry(index);
+
+
+            // current_concept_index[va_phase] = index;
+            current_concept_index = index;
+
+
+            jQuery('#image_modal').modal('hide');
+
+            jQuery('#word_span').text(name);
+            jQuery('#word_span').attr("data-id_concept", id);
+            jQuery('#word_span').attr("data-id_concept_index", index);
+            setDynamicContent('list'); // for offset since hight of left menu could change
+
+            checkImageModal(id, name);
+            jQuery('#custom_modal_backdrop').fadeOut(function() {
+              jQuery(this).remove()
+            });
+
+            /*END*/
+            remove_location_search_listener();
+          }
+
+
+          setTimeout(function() {
+            modal.modal('hide');
+          }, 220); //delay to show select effect
         }
-    } 
-  );
-  
+      });
 
 
- return table;
-                 
+
+
+      if (!modals_initialized) {
+
+        setTimeout(function() {
+          modal.modal('hide');
+        }, 1); //for closing modal on init
+
+        concepts_modal_initialized = true;
+
+        if (locations_modal_modals_initialized && concepts_modal_initialized) {
+          modals_initialized = true;
+
+          if (language_is_set) jQuery('#welcomeback_modal').modal('hide');
+        }
+
+      }
+
+    }
+  });
+
+
+
+  return table;
+
+}
+
+function check_active_concepts(dom_elements){
+  var active_phases = [];
+
+  dom_elements.each(function(){
+    active_phases.push(jQuery(this).data('va_phase'));
+    //console.log(jQuery(this).data('va_phase') - 1);
+  })
+
+  return active_phases
 }
 
 
@@ -2416,7 +2470,7 @@ var table = modal.find(id).DataTable(
             { data: {
                 _:    "column1.html",
                 filter: "column1.filtered_name"
-            } 
+            }
           },
         ],
 
@@ -2439,20 +2493,20 @@ var table = modal.find(id).DataTable(
 
 
             if(!bavaria_version){
-     
+
              var input =  modal.find('input');
-           
+
              input.attr('autocomplete',"off");
 
              buttonparent = jQuery('<div class="list_modal_button_parent"></div>');
-             jQuery('#dialect_modal_table_filter').after(buttonparent);    
+             jQuery('#dialect_modal_table_filter').after(buttonparent);
 
              var buttonparent;
 
              var suggest_button = jQuery('<div class="list_modal_button_in_search suggest_dialect"><i class="fa fa-plus" aria-hidden="true"></i> <span id="suggest_dialect_span">'+suggest_dialect_texts[current_language]+'</span></div>');
              buttonparent.append(suggest_button);
 
-            
+
              suggest_button.on('click',function(){
 
                          jQuery('.input_modal_content').empty();
@@ -2471,14 +2525,14 @@ var table = modal.find(id).DataTable(
                             markInputRed(suggest_field);
                           }else{
 
-                          /*are you sure???*/  
-                          jQuery('#input_modal').modal('hide');                  
+                          /*are you sure???*/
+                          jQuery('#input_modal').modal('hide');
                           jQuery('.input_modal_content').empty();
 
-                           
-                          
+
+
                           setTimeout(function(){
-                            var suggest_headline = jQuery('<div class="suggest_headline dont-break-out">'+ selected_dialect_texts[current_language] +": <em>" + choosen_dialect + '</em></div>');                 
+                            var suggest_headline = jQuery('<div class="suggest_headline dont-break-out">'+ selected_dialect_texts[current_language] +": <em>" + choosen_dialect + '</em></div>');
                             var suggest_button_submit = jQuery('<div id="choose_dialect" class="suggest_button_submit suggest_btn green_button"><i class="fa fa-check" aria-hidden="true"></i> '+ submit_dialect_texts[current_language] +'</div><div id= "regect_btn" class="suggest_button_submit suggest_btn red_button"><i class="fa fa-times" aria-hidden="true"></i> '+ abort_dialect_texts[current_language]+'</div>');
                             var feedback_div = jQuery('<div class="feedback_suggest">'+feedback_texts[current_language]+'</div>');
                             jQuery('.input_modal_content').append(suggest_headline).append(suggest_button_submit);
@@ -2505,14 +2559,14 @@ var table = modal.find(id).DataTable(
 
                                         setTimeout(function() {
 
-                                         
+
 
                                           /*remove choosen marker for previous selected dialect */
                                           if(current_dialect_index!=-1){
                                              var row = table.row(current_dialect_index).node();
-                                             jQuery(row).removeClass('green_row'); 
+                                             jQuery(row).removeClass('green_row');
                                              jQuery(row).find('.fa-check').remove();
-                                          } 
+                                          }
 
 
                                              selected_dialect = choosen_dialect;
@@ -2522,15 +2576,15 @@ var table = modal.find(id).DataTable(
                                              jQuery('.input_modal_content').empty();
 
                                              var data_to_add = '<div title="'+selected_dialect+'" class="dataparent"><span title="'+selected_dialect+'" class="dataspan">'+selected_dialect+'</span></div>';
-                                             table.row.add({name:selected_dialect, id: new_dialect_id, column1:{filtered_name:selected_dialect,html:data_to_add}}).draw();                                             
+                                             table.row.add({name:selected_dialect, id: new_dialect_id, column1:{filtered_name:selected_dialect,html:data_to_add}}).draw();
                                              dialect_array.push({id_dialect:new_dialect_id, name:new_dialect_name});
-                                             
+
 
                                           if(info_window_dialect_change){
-                                             
+
                                               jQuery("#dialect_infowindow").text(selected_dialect);
                                               var id_submited_answer = jQuery("#dialect_infowindow").data("submited-answer");
-                                              
+
 
                                               /*TODO ajax call here for dialect changing of an answer*/
                                               jQuery.ajax({
@@ -2543,19 +2597,19 @@ var table = modal.find(id).DataTable(
                                                   id_dialect : new_dialect_id
                                                 },
                                                 success : function( response ) {
-                                                  
+
                                                 }
 
                                               });
 
                                               info_window_dialect_change = false;
-                                            
+
 
 
                                              setTimeout(function() {modal.modal('hide'); jQuery("custom_modal_backdrop").hide();}, 220);
 
                                           }else{
-                                            
+
                                              selected_dialect = choosen_dialect;
 
                                              jQuery("#dialekt_span").text(the_word_dialect[current_language]+": " + selected_dialect);
@@ -2574,19 +2628,19 @@ var table = modal.find(id).DataTable(
                                             jQuery(row).find('.dataspan').prepend(icon);
                                             console.log(current_dialect_index);
 
-                                           
+
                                       }, 500);
                                       }
-                                  }); 
+                                  });
                             });
 
                           },500)
-                          
 
-                       
-                            
-                          }                        
-                         })        
+
+
+
+                          }
+                         })
             })
 
           /*end handle suggest button click*/
@@ -2606,7 +2660,7 @@ var table = modal.find(id).DataTable(
                   /*console.log(table.row(this));
                    var name = dialect_array[index].name; */
 
-                   
+
                   /*mark selected dialect green*/
                   if(current_dialect_index!=index){
 
@@ -2622,11 +2676,11 @@ var table = modal.find(id).DataTable(
                     if(current_dialect_index!=-1 && current_dialect_index!=index){
 
                        var row = table.row(current_dialect_index).node();
-                       jQuery(row).removeClass('green_row'); 
+                       jQuery(row).removeClass('green_row');
                        jQuery(row).find('.fa-check').remove();
-                    } 
+                    }
 
-                    current_dialect_index = index; 
+                    current_dialect_index = index;
 
                   jQuery("#dialekt_span").text(the_word_dialect[current_language]+": " + name);
                   selected_dialect = name;
@@ -2637,10 +2691,10 @@ var table = modal.find(id).DataTable(
                   }
 
                   if(info_window_dialect_change){
-                   
+
                     jQuery("#dialect_infowindow").text(selected_dialect);
                     var id_submited_answer = jQuery("#dialect_infowindow").data("submited-answer");
-                    
+
 
                        /*TODO ajax call here for dialect changing of an answer*/
                       jQuery.ajax({
@@ -2653,7 +2707,7 @@ var table = modal.find(id).DataTable(
                         id_dialect : table.row(this).data().id
                       },
                       success : function( response ) {
-                        
+
                       }
 
                       });
@@ -2671,23 +2725,23 @@ var table = modal.find(id).DataTable(
 
               jQuery('#dialect_modal').modal({});
 
-              jQuery('#dialect_modal').modal('hide');      
+              jQuery('#dialect_modal').modal('hide');
               jQuery('body').removeClass('modal_init');
               jQuery('#dialect_modal').addClass('fade');
 
         }
-    } 
+    }
   );
-  
-  
+
+
 
 
   table.on('draw.dt', function () {
 
    // console.log("DRAW");
-      
+
       if(jQuery('#dialect_modal .dataTables_empty').length>0){
-         
+
                   jQuery('#locations_modal .dataTables_empty').css('white-space','normal');
                   jQuery('#locations_modal .dataTables_scrollBody').css('overflow','hidden');
                   jQuery('#locations_modal .dataTables_scrollBody').css('min-height','88px');
@@ -2713,10 +2767,10 @@ var table = modal.find(id).DataTable(
               jQuery(row).find('.dataspan').prepend(icon);
             }
 
- 
+
 
  return table;
-                 
+
 }
 
 /*END: for dialect list modal*/
@@ -2726,27 +2780,27 @@ function init_location_search_mode(modal){
       choosing_location_mode = true;
 
               add_location_search_listener();
-                
-                jQuery('#image_modal').modal('hide'); 
+
+                jQuery('#image_modal').modal('hide');
                 if(location_selected){
                   jQuery('#location_span').text(the_word_location[current_language]);
                   jQuery('#user_input').val('');
                   setDynamicContent('list');
                   //stage = 1;
                   location_selected = false;
-                  word_entered = false;  
+                  word_entered = false;
                   jQuery('.pop_submitanswer').popover('hide');
-                  jQuery('#submitanswer').popover('hide');  
+                  jQuery('#submitanswer').popover('hide');
 
-                 // console.log("selected");             
+                 // console.log("selected");
                 }
 
 
-                  
+
                 setTimeout(function() {modal.modal('hide');chooseGemiendeOutsideOfAlpineConvention();}, 100);
                 //console.log("print state");
                // printState();
-            
+
 }
 
 function printState(){
@@ -2765,10 +2819,10 @@ function chooseGemiendeOutsideOfAlpineConvention(){
   jQuery('#location_span').attr('data-content', click_on_location[current_language]); // click_on_location 'Click your location on the map.'
   map.setOptions({draggableCursor:'crosshair'});
 
-  
+
   if(choosing_location_mode){
      event_choose_loc = google.maps.event.addListener(map, "click", function (event) {
-      
+
       var latitude = event.latLng.lat();
       var longitude = event.latLng.lng();
       //console.log( latitude + ', ' + longitude );
@@ -2778,7 +2832,7 @@ function chooseGemiendeOutsideOfAlpineConvention(){
       //google.maps.event.removeListener(event_choose_loc);
       // google.maps.event.removeListener(event_choose_loc_feature);
       //choosing_location_mode = false;
-    }); 
+    });
   }
 }
 
@@ -2792,7 +2846,7 @@ function get_location_and_display(lat, lng){
         data: {
           action : 'searchLocation',
           lat : lat,
-          lng : lng,                              
+          lng : lng,
         },
         success : function( response ) {
 
@@ -2802,7 +2856,7 @@ function get_location_and_display(lat, lng){
           var loc_id = data.id;
           //console.log(loc_name, loc_id);
 
-          if(loc_name != null){  
+          if(loc_name != null){
             jQuery('#location_span').text(loc_name);
             jQuery('#location_span').attr("data-id_location",loc_id);
             //jQuery('#submitanswer').popover('hide');
@@ -2819,10 +2873,10 @@ function get_location_and_display(lat, lng){
             tutorial_running = true;
 
             setDynamicContent('list');
-            displayTooltips(true);         
+            displayTooltips(true);
             showPopUp();
-            
-           
+
+
            showPolygon(loc_name, loc_id, false);
           // jQuery('#custom_backdrop').hide().css('background','');
           }else{
@@ -2834,7 +2888,7 @@ function get_location_and_display(lat, lng){
                      keyboard: false
                   });
           }
-        
+
 
          //console.log("After polygon display: print state");
          //printState();
@@ -2870,7 +2924,7 @@ var ol =    jQuery('<ol class="carousel-indicators findicators"></ol>');
 
   result.append(ol);
 
-}  
+}
 
   var inner = jQuery('<div class="carousel-inner" role="listbox">');
 
@@ -2883,7 +2937,7 @@ var ol =    jQuery('<ol class="carousel-indicators findicators"></ol>');
         var caption = jQuery('<div class="carousel-caption first-info">'+_caption+'</div>');
 
         if (_images[i].image_scource.indexOf("wikipedia/commons") >= 0){
-          var source = jQuery('<div>' + "Wikipedia Commons" + '</div>'); // 
+          var source = jQuery('<div>' + "Wikipedia Commons" + '</div>'); //
           source.css({
             'background-color':'rgba(255, 255, 255, 0.5)',
             'font-size':10,
@@ -2898,24 +2952,24 @@ var ol =    jQuery('<ol class="carousel-indicators findicators"></ol>');
         item.append(caption);
         item.append(body);
         item.append(source);
-        inner.append(item);   
+        inner.append(item);
 
           body.css({'background':'url('+_images[i].image_name+')',
           'background-repeat':'no-repeat',
-          'background-size':"cover"  
+          'background-size':"cover"
           });
-  
+
    }
 
    result.append(inner);
-   if(_images.length>1)result.append(jQuery('<a class="left carousel-control" href="#image_slider" role="button" data-slide="prev"><span class="icon-prev" aria-hidden="true"></span><span class="sr-only">Previous</span></a><a class="right carousel-control" href="#image_slider" role="button" data-slide="next"><span class="icon-next" aria-hidden="true"></span><span class="sr-only">Next</span></a>')); 
+   if(_images.length>1)result.append(jQuery('<a class="left carousel-control" href="#image_slider" role="button" data-slide="prev"><span class="icon-prev" aria-hidden="true"></span><span class="sr-only">Previous</span></a><a class="right carousel-control" href="#image_slider" role="button" data-slide="next"><span class="icon-next" aria-hidden="true"></span><span class="sr-only">Next</span></a>'));
 
 return result;
 }
 
 /**
  * [calculateCenter description]
- * 
+ *
  */
 function calculateCenter() {
   center = map.getCenter();
@@ -2944,9 +2998,9 @@ function cycleText(element,textlist,i,callback){
 
 if(!break_cycle){
 
-    i++;  
+    i++;
     setTimeout(function() {
-      element.attr('lang_id',i);      
+      element.attr('lang_id',i);
       element.animate({opacity:0},800,function(){
       element.text(textlist[i]);
       element.animate({opacity:1},500,function(){
@@ -2961,15 +3015,15 @@ if(!break_cycle){
     }, 1300);
 
       if(typeof callback == "function")
-      callback(i); 
+      callback(i);
 
 }
-                       
+
 }
 
 /**
  * Adjusts Visial Elements, solves problem with wordpress visialization.
- * 
+ *
  */
 function moveElements(){
 	if(userLoggedIn){
@@ -2997,26 +3051,23 @@ function initConceptModal(){
   jQuery('#concepts_modal').removeClass('fade');
   jQuery('#concepts_modal').modal({});
 
-         va_phase = 1;
-         //datatable_concepts = createListModal(jQuery('#concepts_modal'),filtered_data_phase1,"concept"); //  concept_data
-         datatable_concepts = createConceptsListModal(jQuery('#concepts_modal'),concept_data,"concept");
-        //bugfix for scrollerplugin (resize not working properly)
-         var modal = jQuery(this);                         
-         var oldheight = modal.find('.dataTables_scroll').height();  
+   va_phase = 1;
+   //datatable_concepts = createListModal(jQuery('#concepts_modal'),filtered_data_phase1,"concept"); //  concept_data
+   datatable_concepts = createConceptsListModal(jQuery('#concepts_modal'),concept_data,"concept");
+  //bugfix for scrollerplugin (resize not working properly)
+   var modal = jQuery(this);
+   var oldheight = modal.find('.dataTables_scroll').height();
 
-          modal.find('input').on('input',function (){
-          var height =  modal.find('.dataTables_scroll').height()
-            if(oldheight!=height) {
-              datatable_concepts.scroller.measure();oldheight=height;
-            } 
-          })
+    modal.find('input').on('input',function (){
+    var height =  modal.find('.dataTables_scroll').height()
+      if(oldheight!=height) {
+        datatable_concepts.scroller.measure();oldheight=height;
+      }
+    })
 
-
-	jQuery('#concepts_modal').modal('hide');      
+	jQuery('#concepts_modal').modal('hide');
 	jQuery('body').removeClass('modal_init');
 	jQuery('#concepts_modal').addClass('fade');
-  //jQuery('#concepts_modal').find('#va_phase_wrapper').remove();     
-
 }
 
 /**
@@ -3029,21 +3080,21 @@ jQuery('body').addClass('modal_init');
  jQuery('#locations_modal').removeClass('fade');
  jQuery('#locations_modal').modal({});
 
-      datatable_locations = createLocationListModal(jQuery('#locations_modal'),location_data,"location"); 
-  
+      datatable_locations = createLocationListModal(jQuery('#locations_modal'),location_data,"location");
+
       jQuery('[data-toggle="tooltip"]').tooltip();
     //bugfix for scrollerplugin (resize not working properly)
 
-      var modal = jQuery(this);                         
-      var oldheight = modal.find('.dataTables_scroll').height();                                    
+      var modal = jQuery(this);
+      var oldheight = modal.find('.dataTables_scroll').height();
          modal.find('input').on('input',function (){
          var height =  modal.find('.dataTables_scroll').height()
           if(oldheight!=height) {
                 datatable_locations.scroller.measure();oldheight=height;
-            } 
+            }
           })
-   
-    jQuery('#locations_modal').modal('hide');      
+
+    jQuery('#locations_modal').modal('hide');
     jQuery('body').removeClass('modal_init');
     jQuery('#locations_modal').addClass('fade');
 
@@ -3052,7 +3103,7 @@ jQuery('body').addClass('modal_init');
 
 /**
  * [showCustomBackdrop description]
- * 
+ *
  */
 function showCustomBackdrop(){
 
@@ -3064,7 +3115,7 @@ jQuery('#custom_backdrop').fadeIn();
 
 /**
  * [showCustomModalBackdrop description]
- * 
+ *
  */
 function showCustomModalBackdrop(){
 
@@ -3134,7 +3185,7 @@ function showLoginPopUp(){
             display_all_register_login_elements();
            jQuery('#register_modal').modal();
           }, '#register_modal');
-       }).addClass('c_hover'); 
+       }).addClass('c_hover');
 
 
 }
@@ -3151,80 +3202,80 @@ function display_all_register_login_elements(){
 }
 
 
-function showPopUp(){
+function showPopUp() {
 
-             if(tutorial_running && location_selected &&!concept_selected){ 
-              jQuery('#location_span').popover('hide');
-              jQuery('#word_span').popover('show');
-              stage=2;
+  if (tutorial_running && location_selected && !concept_selected) {
+    jQuery('#location_span').popover('hide');
+    jQuery('#word_span').popover('show');
+    stage = 2;
 
-               jQuery('.pop_word_span').parent().on('click',function(){
-                         handleWordSpanClick();
-               }).addClass('c_hover');  
+    jQuery('.pop_word_span').parent().on('click', function() {
+      handleWordSpanClick();
+    }).addClass('c_hover');
 
-            }
+  } else if (tutorial_running && !location_selected && !concept_selected) {
+    stage = 1;
+    jQuery('#location_span').popover('show');
 
-            else if(tutorial_running && !location_selected &&!concept_selected){
-              stage=1;
-              jQuery('#location_span').popover('show');
+    jQuery('.pop_location_span').parent().on('click', function() {
+      handleLocationSpanClick();
+    }).addClass('c_hover');
 
-              jQuery('.pop_location_span').parent().on('click',function(){
-                handleLocationSpanClick();
-              }).addClass('c_hover');  
+  } else if (tutorial_running && !location_selected && concept_selected) {
+    jQuery('#word_span').popover('hide');
+    jQuery('#location_span').popover('show');
+    stage = 1;
 
-            }
+    jQuery('.pop_location_span').parent().on('click', function() {
+      handleLocationSpanClick();
+    }).addClass('c_hover');
+  } else if (tutorial_running && location_selected & concept_selected && !word_entered) {
+    jQuery('#word_span').popover('hide');
+    jQuery('#location_span').popover('hide');
+    jQuery('#user_input').popover('show');
+    jQuery('#user_input').val("");
+    stage = 3;
+    jQuery('.pop_user_input').parent().parent().css('top', "5px");
 
-            else if(tutorial_running && !location_selected &&concept_selected)  {
-              jQuery('#word_span').popover('hide');jQuery('#location_span').popover('show');
-              stage=1;  
+    jQuery('.pop_user_input').parent().on('click', function() {
+      jQuery('#user_input').focus();
+      if (process_restarted) {
+        closeAllInfoWindows();
+        process_restarted = false;
+      }
+    }).addClass('c_hover');
 
-              jQuery('.pop_location_span').parent().on('click',function(){
-                handleLocationSpanClick();
-              }).addClass('c_hover'); 
-            }
+  }
 
-            else if(tutorial_running && location_selected &concept_selected &&!word_entered)  {
-              jQuery('#word_span').popover('hide');jQuery('#location_span').popover('hide');
-              jQuery('#user_input').popover('show');
-              jQuery('#user_input').val("");
-              stage=3;  
-              jQuery('.pop_user_input').parent().parent().css('top',"5px");
+  if (word_entered && stage < 4 && location_selected && concept_selected) {
 
-                 jQuery('.pop_user_input').parent().on('click',function(){
-                         jQuery('#user_input').focus();
-                          if(process_restarted){closeAllInfoWindows();process_restarted=false;}
-               }).addClass('c_hover');  
+    if (stage != 4) {
+      jQuery('#user_input').popover('hide');
+      jQuery('#submitanswer').popover('show');
+      jQuery('.pop_submitanswer').parent().on('click', function() {
 
-            }
+        if (!submit_button_clicked) {
+          saveWord();
+          submit_button_clicked = true;
+          setTimeout(function() {
+            submit_button_clicked = false; /*console.log('submit button: After saveword() ' + submit_button_clicked);*/
+          }, 1000);
+        }
 
-            if(word_entered &&stage<4 &&location_selected &&concept_selected){
-          
-              if(stage!=4){
-                jQuery('#user_input').popover('hide'); 
-                jQuery('#submitanswer').popover('show');
-                jQuery('.pop_submitanswer').parent().on('click',function(){
+      }).addClass('c_hover');
 
-                    if(!submit_button_clicked){
-                      saveWord();
-                      submit_button_clicked = true;
-                      setTimeout(function(){ submit_button_clicked = false; /*console.log('submit button: After saveword() ' + submit_button_clicked);*/}, 1000);
-                    }
+    }
+    stage = 4;
+  }
 
-                }).addClass('c_hover');  
+  if (stage == 6) {
 
-              }
-              stage = 4;  
-            }
-
-            if(stage == 6){
-
-              jQuery('#word_span').popover('hide');
-              tutorial_running = false;
-            }
+    jQuery('#word_span').popover('hide');
+    tutorial_running = false;
+  }
 
 
 }
-
 
 
 function displayTooltips(show){
@@ -3245,7 +3296,7 @@ else jQuery('.popover').css('opacity','0');
 
 jQuery('#login_slider').bind('slid.bs.carousel', function (e) {
        console.log('after slide');
-       jQuery('#login_slider').data('ride', ""); 
+       jQuery('#login_slider').data('ride', "");
       jQuery('#login_slider').carousel('pause');
 });*/
 
@@ -3314,28 +3365,25 @@ jQuery('.fa-sign-out').on('mouseover', function(){
  * @param  {Int} row_to_update [description]
  * @return {String}               [description]
  */
-function editInputA(id_auesserung,id_concept,location_id,concept,row_to_update){
+function editInputA(id_auesserung, id_concept, location_id, concept, row_to_update) {
 
+  jQuery('.input_modal_content').html(
+    returnChangeInput()
 
-        jQuery('.input_modal_content').html(
-            returnChangeInput()
+  );
 
-            );
+  jQuery('#input_modal').modal({
+    backdrop: 'static',
+    keyboard: false
+  });
 
-            jQuery('#input_modal').modal({
-                       backdrop: 'static',
-                       keyboard: false
-            });
-        
-        jQuery('#input_modal').one('shown.bs.modal', function (e) {
-        jQuery(this).find('button').on('click',function(){
+  jQuery('#input_modal').one('shown.bs.modal', function(e) {
+    jQuery(this).find('button').on('click', function() {
 
-             updateInput(concept,id_auesserung,id_concept,location_id,row_to_update);
-        
-          });     
-        })
+      updateInput(concept, id_auesserung, id_concept, location_id, row_to_update);
 
-
+    });
+  })
 
 }
 
@@ -3354,58 +3402,64 @@ jQuery('.message_modal_content').text("Sie haben diese Auesserungen schon gespei
 
 
 }
-
 /*When location is choosen show polygon will check if this location's polygon exists else it will get it from the database*/
 /**
- * After Choosing a locations from the location data tables. Get the location's polygon and display it. 
+ * After Choosing a locations from the location data tables. Get the location's polygon and display it.
  * @param  {String} g_location    [description]
  * @param  {Int} g_location_id [description]
  * @param  {Int} index         [description]
  *
  */
-function showPolygon(g_location,g_location_id, zoom_active){
+function showPolygon(g_location, g_location_id, zoom_active) {
 
-   jQuery.ajax({
-                            url: ajax_object.ajax_url,
-                            type: 'POST',
-                            data: {
-                              action : 'getPolygonGemeinde',
-                              location_id : g_location_id,
-                              searchedGemeinde : g_location,                              
-                            },
-                            success : function( response ) {
-                              
-                                existingLocations.push(JSON.parse(response).location_id);
-                                addGeometry(JSON.parse(response).polygonCoordinates,JSON.parse(response));
-                                
+  jQuery.ajax({
+    url: ajax_object.ajax_url,
+    type: 'POST',
+    data: {
+      action: 'getPolygonGemeinde',
+      location_id: g_location_id,
+      searchedGemeinde: g_location,
+    },
+    success: function(response) {
 
-                                        if(zoom_active){
-                                          if(map.getZoom()>6){
-                                              map.setZoom(6);                                           
-                                            }
-                                        }
-                                            var lat_g = parseGeoData(JSON.parse(response).centerCoordinates).get().lat();
-                                            var lng_g = parseGeoData(JSON.parse(response).centerCoordinates).get().lng();
-                                            centerCoordinates_locations.push({'id':JSON.parse(response).location_id,'lat':lat_g,'lng':lng_g});
+      existingLocations.push(JSON.parse(response).location_id);
+      addGeometry(JSON.parse(response).polygonCoordinates, JSON.parse(response));
 
-                                        if(zoom_active){
-                                            map.panTo({lat: lat_g, lng: lng_g});
-                                            setTimeout(function() {
-                                              smoothZoom(map, 11, map.getZoom());
-                                            }, 200);  
-                                        }
-                                            if(stage==5){
-                                             stage = 6;
 
-                                            setTimeout(function() {
-                                            jQuery('#word_span').popover('show');
-                                            displayTooltips(true);
-                                            }, 2000); 
-                                          }  
-                                                           
-                            }
-                          });//ajax end
-   
+      if (zoom_active) {
+        if (map.getZoom() > 6) {
+          map.setZoom(6);
+        }
+      }
+      var lat_g = parseGeoData(JSON.parse(response).centerCoordinates).get().lat();
+      var lng_g = parseGeoData(JSON.parse(response).centerCoordinates).get().lng();
+      centerCoordinates_locations.push({
+        'id': JSON.parse(response).location_id,
+        'lat': lat_g,
+        'lng': lng_g
+      });
+
+      if (zoom_active) {
+        map.panTo({
+          lat: lat_g,
+          lng: lng_g
+        });
+        setTimeout(function() {
+          smoothZoom(map, 11, map.getZoom());
+        }, 200);
+      }
+      if (stage == 5) {
+        stage = 6;
+
+        setTimeout(function() {
+          jQuery('#word_span').popover('show');
+          displayTooltips(true);
+        }, 2000);
+      }
+
+    }
+  }); //ajax end
+
 }
 
 
@@ -3421,7 +3475,7 @@ function filterMarkers(id){
                markers[i].marker.setIcon(markershape);
             }
             if(markers[i].userMarker){
-               markers[i].marker.setIcon(markershapeChoosen); 
+               markers[i].marker.setIcon(markershapeChoosen);
             }
         }else{
           if(markers[i].type.localeCompare('userInput') != 0){
@@ -3432,7 +3486,7 @@ function filterMarkers(id){
                markers[i].marker.setIcon(markershapeChoosen);
             }
 
-          } 
+          }
     }
 }
 
@@ -3477,11 +3531,11 @@ return res;
 function setRandomTitelImage(callback,modal_id){
 
 var number =  Math.floor(Math.random() * 7) + 1;
-var jpg = "titel_" +number.toString()+".jpg"; 
+var jpg = "titel_" +number.toString()+".jpg";
 var img_url = url.plugins_Url+'/assets/images/'+jpg;
 
    jQuery('<img/>').attr('src', img_url).load(function() {
-   jQuery(this).remove(); 
+   jQuery(this).remove();
 
    jQuery(modal_id).find('.modal-body').css('background','url('+img_url+')');
    jQuery(modal_id).find('.modal-body').css('background-repeat','no-repeat');
@@ -3489,15 +3543,15 @@ var img_url = url.plugins_Url+'/assets/images/'+jpg;
 
      if(typeof callback == "function"){
       callback();
-     } 
-    
+     }
+
   });
 
 }
 
 function checkDataBeforeListModal(marker){
   //console.log(marker);
-   if(aeusserungen_by_locationindex[marker.location_id] != null  && !check_user_aesserungen_in_location(marker.location_name)){ 
+   if(aeusserungen_by_locationindex[marker.location_id] != null  && !check_user_aesserungen_in_location(marker.location_name)){
     openLocationListModal(marker);
    }else{
     jQuery('#custom_backdrop i').css('top','-150px');
@@ -3512,45 +3566,44 @@ function checkDataBeforeListModal(marker){
  */
 function openLocationListModal(marker){
 
-  if(jQuery('#custom_modal_backdrop').length<1)showCustomModalBackdrop();  
+  if(jQuery('#custom_modal_backdrop').length<1){
+    showCustomModalBackdrop();
+  }
+
+  current_location_list_object = aeusserungen_by_locationindex[marker.location_id];
+
+  // find the right object from the array
+  function rightOne(obj) {
+      return obj.id == marker.location_id;
+  }
+
+  //the correct translation of the location
+  var c_location_name = locations[locations.findIndex(rightOne)].name;
+  current_location_list_object[Object.keys(current_location_list_object)[0]].ortsname=c_location_name;
+  current_location_list_object[Object.keys(current_location_list_object)[0]].usergen= marker.user_marker;
+
+  filtered_location_submited_data_phase1 = getLocationListTableData(filter_array(current_location_list_object,1));
+  filtered_location_submited_data_phase2 =  getLocationListTableData(filter_array(current_location_list_object,2));
 
 
+  // FUTURE CHECK BOX FUNCTIONALITY
+  filtered_location_submited_data_phases = [];
+  filtered_location_submited_data_phases.push(filtered_location_submited_data_phase1);
+  filtered_location_submited_data_phases.push(filtered_location_submited_data_phase2);
 
-   current_location_list_object = aeusserungen_by_locationindex[marker.location_id];
+  current_location_list_table_data = [].concat.apply([], filtered_location_submited_data_phases);
 
-   // find the right object from the array
-    function rightOne(obj) {
-        return obj.id == marker.location_id;
-    }
-
-    //the correct translation of the location
-    var c_location_name = locations[locations.findIndex(rightOne)].name;
-    current_location_list_object[Object.keys(current_location_list_object)[0]].ortsname=c_location_name; 
-    current_location_list_object[Object.keys(current_location_list_object)[0]].usergen= marker.user_marker; 
-
-    // filter data here
-
-    current_location_list_table_data = getLocationListTableData(current_location_list_object);
-
-
-    filtered_location_submited_data_phase1 = getLocationListTableData(filter_array(current_location_list_object,1));
-    filtered_location_submited_data_phase2 =  getLocationListTableData(filter_array(current_location_list_object,2));
-
-    current_location_list_table_data = filtered_location_submited_data_phase1;
-            
-
-    jQuery('#location_list_table').DataTable().destroy();
-    jQuery('#location_list_modal').find('.location_header_parent').remove();
-    jQuery('#location_list_modal').find('#va_phase_wrapper').remove();
-    jQuery('#location_list_modal').find('.few_elements').remove();
-    jQuery('#location_list_modal').modal();
-
+  jQuery('#location_list_table').DataTable().destroy();
+  jQuery('#location_list_modal').find('.location_header_parent').remove();
+  jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').remove();
+  jQuery('#location_list_modal').find('.few_elements').remove();
+  jQuery('#location_list_modal').modal();
 }
 
 
 
 function filter_array(array_data,va_phase_cur){
-  
+
 var arr = [];
   for (var key in array_data) {
             if (array_data.hasOwnProperty(key)) {
@@ -3572,347 +3625,331 @@ var arr = [];
 function getLocationListTableData(in_data){
 
   var data = [];
-  var i =0;
-       for(var key in in_data) {
+  var i = 0;
 
-        var cur_data = in_data[key];  
-        var user_data = false;
-        var aeusserung_id = cur_data.id_aeusserung;
+  for(var key in in_data) {
 
-        if(submitedAnswers_indexed[aeusserung_id]!=null)user_data = true;
+    var cur_data = in_data[key];
+    var user_data = false;
+    var aeusserung_id = cur_data.id_aeusserung;
 
+    if(submitedAnswers_indexed[aeusserung_id]!=null){
+      user_data = true;
+    }
 
-        
+    var concept_name = cur_data.konzept;
+    var author = cur_data.author;
+    var word = cur_data.word;
+    var concept_idx = get_table_index_by_va_phase(cur_data.id_concept);
+    var token = cur_data.tokenisiert;
 
-        var concept_name = cur_data.konzept;
-        var author = cur_data.author;
-        var word = cur_data.word;
-        //var concept_idx = concepts_index_by_id[va_phase][cur_data.id_concept].index;
-        var concept_idx = get_table_index_by_va_phase(cur_data.id_concept);
-        var token = cur_data.tokenisiert;
+    if(author.indexOf("anonymous") != -1){
+      author=anonymous_texts[current_language];
+    }
 
-        if(author.indexOf("anonymous") != -1) author=anonymous_texts[current_language];
+    data[i] = [];
 
-        data[i] = [];
+    if(concept_idx<important_concepts_count){
+      data[i].push('<div ae_id="'+aeusserung_id+'" con_id="'+cur_data.id_concept+'" user_data="'+user_data
+                    +'" class="dataparent" title="'+concept_name
+                    +'" token="'+token+'"><span class="dataspan"><i title="'+important_concepts_texts[current_language]
+                    +'" class="fa fa-exclamation-triangle" aria-hidden="true"></i>'+concept_name+'</span></div>');
+    }else{
+      data[i].push('<div ae_id="'+aeusserung_id+'" con_id="'+cur_data.id_concept+'" user_data="'+user_data+
+                    '" class="dataparent" title="'+concept_name+'" token="'+token+
+                    '"><span class="dataspan">'+concept_name+'</span></div>');
+    }
 
-            if(concept_idx<important_concepts_count)data[i].push('<div ae_id="'+aeusserung_id+'" con_id="'+cur_data.id_concept+'" user_data="'+user_data+'" class="dataparent" title="'+concept_name+'" token="'+token+'"><span class="dataspan"><i title="'+important_concepts_texts[current_language]+'" class="fa fa-exclamation-triangle" aria-hidden="true"></i>'+concept_name+'</span></div>');
-            else data[i].push('<div ae_id="'+aeusserung_id+'" con_id="'+cur_data.id_concept+'" user_data="'+user_data+'" class="dataparent" title="'+concept_name+'" token="'+token+'"><span class="dataspan">'+concept_name+'</span></div>');
+    data[i].push('<span class="c_answer_span dataspan"  title="'+word+'">\"'+word+'\"</span>');
+    data[i].push('<span class="authorspan dataspan"  title="'+author+'">('+author+')</span>');
 
-            data[i].push('<span class="c_answer_span dataspan"  title="'+word+'">\"'+word+'\"</span>');
-            data[i].push('<span class="authorspan dataspan"  title="'+author+'">('+author+')</span>');
-            //data[i].push('<div value = "' + (Math.floor(Math.random() * 2) + 1) + '">' +  '</div>');          
-            // data[i].push('<div class="location_list_controls"><div class="change_button_in_list rowbutton"><i class="fa fa-pencil" aria-hidden="true"></i> '+change_input[current_language]+'</div><div class="delete_button_in_list rowbutton"><i class="fa fa-trash-o" aria-hidden="true"></i> '+delete_input[current_language]+'</div></div>');
-         i++;
-        }
+    i++;
+  }
 
-   return data;     
-
+  return data;
 }
 
 
-function createLocationListTable(table_data){
+function createLocationListTable(table_data) {
 
 
-va_phase = 1;
-var searching = false;
-if(table_data.length>10)searching=true;
+  va_phase = 1;
+  var searching = false;
+  if (table_data.length > 10) searching = true;
 
-var emptyTable = no_results_data_table[current_language];
+  var emptyTable = no_results_data_table[current_language];
 
-var table = jQuery('#location_list_modal').find('#location_list_table').DataTable(
+  var table = jQuery('#location_list_modal').find('#location_list_table').DataTable({
+
+    data: table_data,
+    deferRender: false,
+    scrollY: "75vh",
+    scrollX: false,
+    scrollCollapse: true,
+    info: false,
+    ordering: false,
+    searching: searching,
+    responsive: true,
+    columns: [{
+        "width": "45%"
+      },
       {
-
-      data:table_data,
-      deferRender:    false,  //otherwise .node() won't always work
-      scrollY:        "75vh",
-      scrollX: false, 
-      scrollCollapse: true,
-      info:false,
-      ordering : false,
-      searching: searching,
-      responsive:true,
-
-    columns: [
-    { "width": "45%" },
-    { "width": "30%" },
-    { "width": "25%" },
-     /*{ "display": "none"}*/
+        "width": "30%"
+      },
+      {
+        "width": "25%"
+      }
     ],
-
-
-
-       scroller: {
-       displayBuffer: 15,
+    scroller: {
+      displayBuffer: 15,
     },
-    language:{
-        zeroRecords: emptyTable
+    language: {
+      zeroRecords: emptyTable
     },
+    fnInitComplete: function(settings) {
 
-     fnInitComplete: function(settings) {
+      var name = current_location_list_object[Object.keys(current_location_list_object)[0]].ortsname;
+      var num = table_data.length; //Object.keys(current_location_list_object).length;
+      var usergen = current_location_list_object[Object.keys(current_location_list_object)[0]].usergen;
+      var tokenisiert = current_location_list_object[Object.keys(current_location_list_object)[0]].tokenisiert;
 
-     var name = current_location_list_object[Object.keys(current_location_list_object)[0]].ortsname;
-     var num = table_data.length;//Object.keys(current_location_list_object).length;
-     var usergen = current_location_list_object[Object.keys(current_location_list_object)[0]].usergen;
-     var tokenisiert = current_location_list_object[Object.keys(current_location_list_object)[0]].tokenisiert;
+      var head = jQuery('<div class="location_header_parent"><div class="location_header_num">' + num + '</div><span class ="location_header">' + name + '</span></div>');
 
-     var head = jQuery('<div class="location_header_parent"><div class="location_header_num">'+num+'</div><span class ="location_header">'+name+'</span></div>');
+      var few_elements = jQuery('<div>').text(too_few_elements[current_language]).addClass('few_elements');
 
-     var few_elements = jQuery('<div>').text(too_few_elements[current_language]).addClass('few_elements');
-
-      if(usergen){
-          head.find('.location_header_num').addClass('user_generated_m');
-   	   }
+      if (usergen) {
+        head.find('.location_header_num').addClass('user_generated_m');
+      }
 
 
-     if(searching){
-    	 jQuery('#location_list_modal').find('#location_list_table_filter').prepend(head);
-    	 head.css('display','inline-block');
-    	 jQuery('#location_list_modal').find('#location_list_table_filter').find('input').css('min-width','initial');
-    	 jQuery('#location_list_modal').find('#location_list_table_filter').find('label').css('width','initial').css('float','right').css('margin-top','-8px');
-  	 }
-  	 else{
-  	   jQuery('#location_list_modal').find('.custom_header').after(head);
+      if (searching) {
+        jQuery('#location_list_modal').find('#location_list_table_filter').prepend(head);
+        head.css('display', 'inline-block');
+        jQuery('#location_list_modal').find('#location_list_table_filter').find('input').css('min-width', 'initial');
+        jQuery('#location_list_modal').find('#location_list_table_filter').find('label').css('width', 'initial').css('float', 'right').css('margin-top', '-8px');
+      } else {
+        jQuery('#location_list_modal').find('.custom_header').after(head);
+      }
 
-       
-
-       // var few_elements = jQuery('<div>').text('Noch zu wenige Elemente.').addClass('few_elements');
-
-        
-
-  	 }
-
-       check_free_space_few_elements(num,few_elements);
-        
+      check_free_space_few_elements(num, few_elements);
       add_few_elements_click_listener(current_location_list_object[Object.keys(current_location_list_object)[0]]);
 
       var animating = false;
 
-      jQuery('#location_list_modal').find('tbody').off().on('click', 'tr', function () {
+      jQuery('#location_list_modal').find('tbody').off().on('click', 'tr', function() {
 
-      
-      if(!animating){
+        if (!animating) {
+          animating = true;
 
-      animating = true;
+          if (jQuery(this).find('.dataparent').attr('user_data') == "true") {
 
-      if(jQuery(this).find('.dataparent').attr('user_data')=="true"){  
+            /*display element depending if the Aeusserung is tokenisiert*/
+            var token = jQuery(this).find('.dataparent').attr('token');
+            if (token == "0") {
+              var element_to_animate = ".location_list_controls";
+            } else {
+              var element_to_animate = ".tokenisiert";
+            }
 
-      /*display element depending if the Aeusserung is tokenisiert*/
-      
+            if (jQuery(this).find(element_to_animate).css('right') == "-170px") {
+              jQuery(this).find(element_to_animate).show().animate({
+                right: ["0", "swing"]
+              }, 450, function() {
+                jQuery(this).css('right', '0px');
+                animating = false;
+              });
+            } else {
+              jQuery(this).find(element_to_animate).animate({
+                right: ["-170", "swing"]
+              }, 450, function() {
+                jQuery(this).hide().css('right', '-170px');
+                animating = false;
+              });
+            }
 
-      var token = jQuery(this).find('.dataparent').attr('token');
-      if(token == "0"){
-        var element_to_animate = ".location_list_controls";
-      }else{
-        var element_to_animate = ".tokenisiert";
-
-      }
-
-      if(jQuery(this).find(element_to_animate).css('right')=="-170px"){
-        
-        jQuery(this).find(element_to_animate).show().animate({
-          right:["0", "swing"]
-          }, 450, function() {
-              jQuery(this).css('right','0px');
-              animating = false;
-          });
-      }
-
-      else{
-         
-          jQuery(this).find(element_to_animate).animate({
-          right:[ "-170", "swing"]
-          }, 450, function() {
-            jQuery(this).hide().css('right','-170px');
-            animating = false;
-          });
-
-      }
-
-        var clicked_index  = table.row(this).index();
+            var clicked_index = table.row(this).index();
 
 
-        table.rows().eq(0).each( function (index) {
+            table.rows().eq(0).each(function(index) {
               var row = table.row(index);
               var jrow = jQuery(row.node());
-              if(clicked_index!=index && (jrow.find(element_to_animate).css('right')=="0px")){
+              if (clicked_index != index && (jrow.find(element_to_animate).css('right') == "0px")) {
 
-                 jrow.find(element_to_animate).animate({
-                  right:[ "-170", "swing"]
-                  }, 450, function() {
-                       jrow.find(element_to_animate).hide().css('right','-170px');
-                  });
+                jrow.find(element_to_animate).animate({
+                  right: ["-170", "swing"]
+                }, 450, function() {
+                  jrow.find(element_to_animate).hide().css('right', '-170px');
+                });
               }
-          });
-
-      }
-
-      else{
-
-        var id = parseInt(jQuery(this).find('.dataparent').attr('con_id'));
-        var name = jQuery(this).find('.dataparent').attr('title');
-        setQ(name,id);
-         
-        jQuery('#location_list_modal').modal('hide');
-        
-      }  
-
-      }
-
-        })
+            });
+          } else {
+            var id = parseInt(jQuery(this).find('.dataparent').attr('con_id'));
+            var name = jQuery(this).find('.dataparent').attr('title');
+            setQ(name, id);
+            jQuery('#location_list_modal').modal('hide');
+          }
+        }
+      })
 
       /*add Buttons Alm/Nature Submited Answers*/
       /*location_aeusserungen*/
-    var buttonparent = jQuery('.location_header_parent');
-    var alm = jQuery('<div class="list_modal_button_va_phase va_phase_1" style="background-color:#4286f4;" data-va_phase = "1">'+alpine_agriculture[current_language]+'</div>');//width:50%; 'Almwirtschaft'
-    var natur = jQuery('<div class="list_modal_button_va_phase va_phase_2" style="background-color:#4CAF50;"  data-va_phase = "2">'+alpine_nature[current_language]+'</div>');//width:50%; 'Natur'
+      var buttonparent = jQuery('.location_header_parent');
+      var alm = jQuery('<div class="list_modal_button_va_phase va_phase_1 active"  data-va_phase = "1">' + alpine_agriculture[current_language] + '</div>'); //width:50%; 'Almwirtschaft'
+      var natur = jQuery('<div class="list_modal_button_va_phase va_phase_2 active"   data-va_phase = "2">' + alpine_nature[current_language] + '</div>'); //width:50%; 'Natur'
 
-    
+      jQuery("#va_phase_wrapper_location_list").remove();
+      var va_phase_wrapper = jQuery('<div id="va_phase_wrapper_location_list" class="va_phase_wrapper"></div>');
 
-    var va_phase_wrapper = jQuery('<div id="va_phase_wrapper"></div>');
+      va_phase_wrapper.append(alm);
+      va_phase_wrapper.append(natur);
 
-    va_phase_wrapper.append(alm);
-    va_phase_wrapper.append(natur);
+      jQuery('#location_list_modal').children().find('.modal-content').append(va_phase_wrapper);
 
-    
+      //jQuery('.va_phase_1').css('opacity', 1.0);
 
-    jQuery('#location_list_modal').children().find('.modal-content').append(va_phase_wrapper);
-
-    // if(current_language == 1){
-    //   console.log("french");
-    //   jQuery('#va_phase_wrapper').css('top', '390px');
-    // }
-     
-    jQuery('.va_phase_1').css('opacity', 1.0);
-
-    jQuery('.list_modal_button_va_phase').on('click', function(){
+      jQuery("#va_phase_wrapper_location_list").find('.list_modal_button_va_phase').on('click', function() {
         var selected_va_phase = jQuery(this).data('va_phase');
-      
-       
-        if(va_phase != selected_va_phase){
-          va_phase = selected_va_phase;
 
+        //WORKING VA_PHASE FILTERING
+        // if (va_phase != selected_va_phase) {
+        //   va_phase = selected_va_phase;
+        //
+        //   switch (selected_va_phase) {
+        //     case 1:
+        //       table.clear();
+        //       table.rows.add(filtered_location_submited_data_phase1);
+        //       table.columns.adjust().draw();
+        //       reMeasureDatatables();
+        //
+        //       table.scroller.measure();
+        //       table.columns.adjust();
+        //
+        //       jQuery('.va_phase_1').css('opacity', 1.0);
+        //       jQuery('.va_phase_2').css('opacity', 0.9);
+        //
+        //       jQuery('.location_header_num').text(filtered_location_submited_data_phase1.length);
+        //       check_free_space_few_elements(filtered_location_submited_data_phase1.length, few_elements);
+        //       add_few_elements_click_listener(current_location_list_object[Object.keys(current_location_list_object)[0]]);
+        //       break;
+        //     case 2:
+        //       table.clear();
+        //       table.rows.add(filtered_location_submited_data_phase2);
+        //       table.columns.adjust().draw();
+        //       reMeasureDatatables();
+        //
+        //       table.scroller.measure();
+        //       table.columns.adjust();
+        //
+        //       jQuery('.va_phase_1').css('opacity', 0.9);
+        //       jQuery('.va_phase_2').css('opacity', 1.0);
+        //
+        //       jQuery('.location_header_num').text(filtered_location_submited_data_phase2.length);
+        //       check_free_space_few_elements(filtered_location_submited_data_phase2.length, few_elements);
+        //       add_few_elements_click_listener(current_location_list_object[Object.keys(current_location_list_object)[0]]);
+        //       break;
+        //   }
+        // }
 
-          
-          switch(selected_va_phase){
-            case 1: 
-              // console.log(filtered_location_submited_data_phase1);
-              // console.log('clear data and add new');
-              table.clear();
-              table.rows.add(filtered_location_submited_data_phase1); 
-              table.columns.adjust().draw();
-              reMeasureDatatables();
-              
-              table.scroller.measure();
-              table.columns.adjust();
+        //CHECKBOX-like functionality
+        switch (selected_va_phase) {
+          case 1:
+            if(jQuery("#va_phase_wrapper_location_list").find('.va_phase_1').hasClass('active')){
+              jQuery("#va_phase_wrapper_location_list").find('.va_phase_1').removeClass('active');
+            }else{
+              jQuery("#va_phase_wrapper_location_list").find('.va_phase_1').addClass('active');
+            }
 
-              jQuery('.va_phase_1').css('opacity', 1.0);
-              jQuery('.va_phase_2').css('opacity', 0.9);
-
-
-
-              jQuery('.location_header_num').text(filtered_location_submited_data_phase1.length);                 
-              check_free_space_few_elements(filtered_location_submited_data_phase1.length, few_elements);
-              add_few_elements_click_listener(current_location_list_object[Object.keys(current_location_list_object)[0]]);
             break;
-
-            case 2:
-
-              table.clear();
-              table.rows.add(filtered_location_submited_data_phase2);
-              table.columns.adjust().draw();
-              reMeasureDatatables();
-
-              table.scroller.measure();
-              table.columns.adjust();
-
-              jQuery('.va_phase_1').css('opacity', 0.9);
-              jQuery('.va_phase_2').css('opacity', 1.0);
-
-
-
-              jQuery('.location_header_num').text(filtered_location_submited_data_phase2.length);     
-              check_free_space_few_elements(filtered_location_submited_data_phase2.length, few_elements);
-              add_few_elements_click_listener(current_location_list_object[Object.keys(current_location_list_object)[0]]);
+          case 2:
+            if(jQuery("#va_phase_wrapper_location_list").find('.va_phase_2').hasClass('active')){
+              jQuery("#va_phase_wrapper_location_list").find('.va_phase_2').removeClass('active');
+            }else{
+              jQuery("#va_phase_wrapper_location_list").find('.va_phase_2').addClass('active');
+            }
             break;
-            
-            default: 
-            
-            
-          }
         }
 
+        table.clear().draw();
+
+        var active_location_data  = check_active_concepts(jQuery('#va_phase_wrapper_location_list').find('.active'));
+        var list_elements = [];
+
+        if(active_location_data.length > 0){
+          for (var i = 0; i < active_location_data.length; i++) {
+            table.rows.add( filtered_location_submited_data_phases[active_location_data[i] - 1] );
+            filtered_location_submited_data_phases[active_location_data[i] - 1].map(function(el){
+              list_elements.push(el);
+            })
+          }
+        }else{
+          // list_elements = [].concat.apply([], filtered_location_submited_data_phases);
+          // table.rows.add(list_elements);
+          list_elements = [];
+          table.rows.add(list_elements);
+        }
+
+        table.columns.adjust().draw(); // Redraw the DataTable
+
+        table.scroller.measure();
+        table.columns.adjust();
+
+        jQuery('.location_header_num').text(list_elements.length);
+        check_free_space_few_elements(list_elements.length, few_elements);
+        add_few_elements_click_listener(current_location_list_object[Object.keys(current_location_list_object)[0]]);
 
       });
 
     },
+    createdRow: function(row, data, index) {
 
-    createdRow: function (row, data, index ) {
+      if (jQuery(row).find('.dataparent').attr('user_data') == "false") {
+        jQuery(row).addClass('other_user_row');
+      } else {
+        jQuery(row).addClass('this_user_row');
+        jQuery(row).append(jQuery('<div class="location_list_controls"><div class="change_button_in_list rowbutton"><i class="fa fa-pencil" aria-hidden="true"></i> ' +
+          change_input[current_language] + '</div><div class="delete_button_in_list rowbutton"><i class="fa fa-trash-o" aria-hidden="true"></i> ' +
+          delete_input[current_language] + '</div></div>'));
+        /*tokeniriest*/
+        jQuery(row).append(jQuery('<div class="tokenisiert"><i class="fa fa-check-square-o" aria-hidden="true"></i>  ' + permanently_saved[current_language] + '</div>'));
 
-      if(jQuery(row).find('.dataparent').attr('user_data')=="false"){
+        jQuery(row).find('.change_button_in_list').on('click', function() {
+          var aeusserung_id = jQuery(row).find('.dataparent').attr('ae_id');
+          var cur_obj = current_location_list_object[aeusserung_id];
+          var row_to_update = jQuery(row);
 
-      jQuery(row).addClass('other_user_row');
+          editInputA(aeusserung_id, cur_obj.id_concept, cur_obj.id_geo, cur_obj.konzept, row_to_update);
+        })
+
+        jQuery(row).find('.delete_button_in_list').on('click', function() {
+          table.row(jQuery(this).parents('tr')).remove().draw();
+          table.scroller.measure();
+
+          var aeusserung_id = jQuery(row).find('.dataparent').attr('ae_id');
+          var cur_obj = current_location_list_object[aeusserung_id];
+
+          deleteInput(aeusserung_id, cur_obj.ortsname, cur_obj.id_concept, cur_obj.id_geo);
+
+          var remaining_num = Object.keys(aeusserungen_by_locationindex[cur_obj.id_geo]).length
+          jQuery('#location_list_modal').find('.location_header_num').text(remaining_num);
+
+          if (check_for_current_user_entries(cur_obj.id_geo) <= 0) {
+            jQuery('#location_list_modal').find('.location_header_num').removeClass('user_generated_m');
+          }
+
+          if (remaining_num == 0) {
+            jQuery('#location_list_modal').modal('hide')
+          }
+        })
 
       }
-
-      else{
-         jQuery(row).addClass('this_user_row');
-
-            jQuery(row).append(jQuery('<div class="location_list_controls"><div class="change_button_in_list rowbutton"><i class="fa fa-pencil" aria-hidden="true"></i> '+change_input[current_language]+'</div><div class="delete_button_in_list rowbutton"><i class="fa fa-trash-o" aria-hidden="true"></i> '+delete_input[current_language]+'</div></div>'));
-            
-            /*tokeniriest*/
-            jQuery(row).append(jQuery('<div class="tokenisiert"><i class="fa fa-check-square-o" aria-hidden="true"></i>  ' +  permanently_saved[current_language]  + '</div>'));
-            // jQuery(row).append(jQuery('<div class="tokenisiert"><div class="change_button_in_list rowbutton"><i class="fa fa-pencil" aria-hidden="true"></i> '+'TEST'+'</div><div class="delete_button_in_list rowbutton"><i class="fa fa-trash-o" aria-hidden="true"></i> '+'TEST'+'</div></div>'));
-
-
-
-            jQuery(row).find('.change_button_in_list').on('click',function(){
-
-            var aeusserung_id = jQuery(row).find('.dataparent').attr('ae_id');
-            var cur_obj = current_location_list_object[aeusserung_id];
-
-            var row_to_update = jQuery(row);
-
-            editInputA(aeusserung_id,cur_obj.id_concept,cur_obj.id_geo,cur_obj.konzept,row_to_update);
-
-          })
-
-
-          jQuery(row).find('.delete_button_in_list').on('click',function(){
-    
-              table.row(jQuery(this).parents('tr')).remove().draw();
-              table.scroller.measure();
-              
-              var aeusserung_id = jQuery(row).find('.dataparent').attr('ae_id');
-              //console.log(current_location_list_object);
-              var cur_obj = current_location_list_object[aeusserung_id];
-             // console.log(cur_obj);
-              deleteInput(aeusserung_id,cur_obj.ortsname,cur_obj.id_concept,cur_obj.id_geo);
-
-              var remaining_num = Object.keys(aeusserungen_by_locationindex[cur_obj.id_geo]).length
-              jQuery('#location_list_modal').find('.location_header_num').text(remaining_num);
-
-              if(check_for_current_user_entries(cur_obj.id_geo) <= 0){
-                jQuery('#location_list_modal').find('.location_header_num').removeClass('user_generated_m');
-              }
-
-              if(remaining_num==0){
-                jQuery('#location_list_modal').modal('hide')
-              }
-
-          })
-      }
-  
     }
+  })
 
-})
-
-return table;
+  return table;
 
 }
 
-function check_free_space_few_elements(num_elements,few_elements){ 
-
-  //setTimeout(function(){console.log(jQuery('#location_list_modal').find('.modal-body').height());},100);
+function check_free_space_few_elements(num_elements,few_elements){
 
   if(num_elements < 8){
     jQuery('#location_list_modal').find('.few_elements').show();
@@ -3922,9 +3959,7 @@ function check_free_space_few_elements(num_elements,few_elements){
     jQuery('#location_list_modal').find('.modal-content').append(few_elements);
     var margin_top =  80 / num_elements;
     few_elements.css('padding', margin_top + 'px'); // margin-top
-    
   }else{
-
      jQuery('#location_list_modal').find('.few_elements').hide();
   }
 }
@@ -3936,7 +3971,7 @@ function add_few_elements_click_listener(location_object){
     var current_location_id = location_object.id_geo;
     var current_location_name = location_object.ortsname;
 
-  
+
 
     if(map.getZoom() < 9){
       var zoom_to_location = true;
@@ -3955,15 +3990,17 @@ function add_few_elements_click_listener(location_object){
 }
 
 function checkImageModal(id,name){
-
-  var myimages=[]; 
-
+  var myimages=[];
   myimages = images[id];
-  if(myimages.length>0)do_image_modal=true;
+
+  if(myimages.length>0){
+    do_image_modal=true;
+  }
+
   if(do_image_modal){
     var c =  buildCarousel(myimages,name);
-    jQuery('#image_modal').find('.modal-body').append(c);  
-}
+    jQuery('#image_modal').find('.modal-body').append(c);
+  }
 
 }
 
@@ -3983,7 +4020,7 @@ function refresh_page(){ /*Choose another language*/
 
 /**
  * [reMeasureDatatables description]
- * 
+ *
  */
 function reMeasureDatatables(){
 
@@ -4006,7 +4043,7 @@ function reMeasureDatatables(){
 
 /**
  * Sets a timer, after which a login/register pop up will show up.
- * 
+ *
  */
 function startLoginTimer(){
 
@@ -4022,7 +4059,7 @@ function startLoginTimer(){
 
           },3000);
         }
- 
+
         // setTimeout(function() {
         // 	if(!jQuery('#register_modal').hasClass('in')){
         //   	hideAllOpenModals();
@@ -4035,7 +4072,7 @@ function startLoginTimer(){
 }
 
 /**
- * @deprecated 
+ * @deprecated
  */
 function checkLoginPopUp(){
 
@@ -4067,7 +4104,7 @@ allconceptindices[i] = i;
 var return_object= {};
 
  for(var key in submitedAnswers_indexed) {
-    var submitted_index = submitedAnswers_indexed[key].concept_index; 
+    var submitted_index = submitedAnswers_indexed[key].concept_index;
     allconceptindices[submitted_index] = -1;
  }
 
@@ -4098,7 +4135,7 @@ var table_data = [];
 
 var i =0;
 for(var key in array){
- i++; 
+ i++;
   var arr = array[key];
 
   if(arr[3]){
@@ -4138,8 +4175,8 @@ jQuery('#toplistmodal').modal();
 function buildHighScoreSelect(){
 
   setRandomTitelImage(function(){
-    showCustomModalBackdrop();  
-    
+    showCustomModalBackdrop();
+
 
         getHighScoresFromDB(function(){
 
@@ -4173,7 +4210,7 @@ function buildHighScoreSelect(){
 
 function openShareModal(){
     setRandomTitelImage(function(){
-      showCustomModalBackdrop(); 
+      showCustomModalBackdrop();
       var cur_location_href = document.location.href;
       jQuery('#share_modal').modal({});
 
@@ -4232,13 +4269,13 @@ function getHighScoresFromDB(callback){
                     },
                     success : function( response ) {
 
-                      var result = JSON.parse(response);  
+                      var result = JSON.parse(response);
                       top_concepts = result["top_concepts"];
                       top_users =  result["top_users"];
                       top_locations = result["top_locations"];
 
                         if(typeof callback == "function")
-                        callback(); 
+                        callback();
 
                     }
 
@@ -4305,7 +4342,7 @@ function send_anonymous_data(){
       jQuery('#no_anoymous_user_data').modal('show');
       jQuery('#no_anoymous_user_data_text').text("Please enter a valid number!");
     }
-    
+
   }else{
     console.log("no user to register");
     jQuery('#no_anoymous_user_data').modal('show');
@@ -4316,8 +4353,14 @@ function send_anonymous_data(){
 user_name = ['Benutzername','Nom d`utilisateur','Nome utente','Benutzername'];
 birth_year = ['Geburtsjahr','Année de naissance','Anno di nascita','Geburtsjahr'];
 register = ['Registrieren','Enregistrer','Registrare','Registrieren'];
-send_anonymous_data_text = ['Daten anonym schicken','Envoyer des données anonymes','Inviare i dati in forma anonima','Daten anonym schicken'];
+send_anonymous_data_text = ['Daten anonym abschicken','Envoyer des données anonymes','Inviare i dati in forma anonima','Daten anonym schicken'];
 send_anonymous_data_modal_text = ['Daten ohne Registriegung anonym abschicken.','Envoyer des données anonymes sans enregistrement.','Inviare i dati in forma anonima senza registrazione.','Daten ohne Registriegung anonym abschicken.'];
+details_why_register_send_anonymous_data =
+['Für unsere wissenschaftliche Arbeit ist die Angabe des Alters von großem Nutzen. Wir würden uns deshalb freuen, wenn Sie uns Auskunft über ihr Alter geben. Sie haben die Möglichkeit, entweder nur Ihr Alter einzutragen und Ihre Daten anonym abzuschicken oder sich zusätzlich noch zu registrieren.',
+'L\'indication de l\'âge est très utile pour notre travail scientifique. C\'est pourquoi nous serions heureux si vous nous donnez des informations sur votre âge. Vous pouvez soit entrer seulement votre âge et envoyer vos données de manière anonyme, soit vous inscrire en plus.',
+'L\'indicazione dell\'età è molto utile per il nostro lavoro scientifico. Saremo pertanto lieti di ricevere informazioni sulla vostra età. Potete inserire solo la vostra età e inviare i vostri dati in forma anonima o registrarvi ulteriormente.',
+'Für unsere wissenschaftliche Arbeit ist die Angabe des Alters von großem Nutzen. Wir würden uns deshalb freuen, wenn Sie uns Auskunft über ihr Alter geben. Sie haben die Möglichkeit, entweder nur Ihr Alter einzutragen und Ihre Daten anonym abzuschicken oder sich zusätzlich noch zu registrieren.'];
+
 
 forgot_password_text = ['Passwort vergessen','Mot de passe oublié','Dimenticato la password','Forgot password'];
 enter_username_or_email = ['Benutzername oder E-Mail eingeben','entrer le nom d`utilisateur ou l`adresse électronique','Inserire il nome utente o l`indirizzo e-mail','Enter username or email']
@@ -4336,9 +4379,9 @@ function add_translation_register_modal(){
 
   jQuery('#lwa_user_remember').val(enter_username_or_email[current_language]);
 
-  jQuery('.slides_reg_register').text(new_acc_text_detail[current_language]); 
-  jQuery('.slides_reg_login').text(new_acc_text_detail[current_language]); 
-  jQuery('.slides_reg_forgot').text(forgot_password_text[current_language]); 
+  jQuery('.slides_reg_register').text(new_acc_text_detail[current_language]);
+  jQuery('.slides_reg_login').text(new_acc_text_detail[current_language]);
+  jQuery('.slides_reg_forgot').text(forgot_password_text[current_language]);
 
 
   jQuery('#user_login').val(user_name[current_language]);
@@ -4367,6 +4410,8 @@ function add_translation_register_modal(){
   jQuery('#lwa_user_remember').on('focus', function(){    if(jQuery(this).val() == enter_username_or_email[current_language] ){      jQuery(this).val('');    }  })
   jQuery('#lwa_user_remember').on('blur', function(){    if(jQuery(this).val() == '' ){      jQuery(this).val(enter_username_or_email[current_language]);    }  })
 
+  var additional_info = jQuery('.slides_reg_register').after('<div id="additional_info">');
+  jQuery('#additional_info').text(details_why_register_send_anonymous_data[current_language]);
 }
 
 function add_anonymous_data_popover(){
@@ -4384,6 +4429,7 @@ function add_anonymous_data_popover(){
   });
 
   jQuery('.send_anonymous_btn').popover('show');
+  jQuery('.send_anonymous_btn').popover('hide');
 
   var popover_id_anonym = '#' + jQuery('.send_anonymous_btn').attr('aria-describedby');
 
@@ -4391,22 +4437,26 @@ function add_anonymous_data_popover(){
     this.style.setProperty( 'z-index', '10000', 'important' );
   });
 
-  jQuery('body').on('click', function (e) {
-      //did not click a popover toggle or popover
-      if (jQuery(e.target).data('toggle') !== 'popover'
-          && jQuery(e.target).parents('.popover.in').length === 0) { 
-          jQuery('[data-toggle="popover"]').popover('hide');
-          jQuery('body').unbind();
-      }
-  });
+  // jQuery('body').on('click', function (e) {
+  //     //did not click a popover toggle or popover
+  //     if (jQuery(e.target).data('toggle') !== 'popover'
+  //         && jQuery(e.target).parents('.popover.in').length === 0) {
+  //         jQuery('[data-toggle="popover"]').popover('hide');
+  //         jQuery('body').unbind();
+  //     }
+  // });
 
   //highlight anonymous data(age input field)
   jQuery('.send_anonymous_btn').hover(function(){
     jQuery('#user_login').css('opacity', '0.3');
     jQuery('#user_email').css('opacity', '0.3');
+    jQuery('.send_anonymous_btn').popover('show');
+    console.log("Popover show");
   }, function(){
     jQuery('#user_login').css('opacity', '1');
     jQuery('#user_email').css('opacity', '1');
+    jQuery('.send_anonymous_btn').popover('hide');
+    console.log("Popover hide");
   });
 
 }
@@ -4443,7 +4493,7 @@ function sendSuggestEmail(entry, callback){
                     },
                     success : function( response ) {
 
-                       callback(); 
+                       callback();
                   }
 
             });
@@ -4470,7 +4520,7 @@ function display_dialect(){
       openDialectModal();
     }else{
       get_dialects(function(){openDialectModal();});
-      
+
     }
   })
 
@@ -4517,9 +4567,9 @@ function populate_concept_span(){
     }else{
       //console.log("don't populate span");
     }
-    
+
   }
-  
+
 }
 
 function init_left_menu(){

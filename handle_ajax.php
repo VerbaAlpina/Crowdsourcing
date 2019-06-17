@@ -281,10 +281,10 @@ function saveWord(){
 
 	 }
 	}
-	
+
 
 	echo json_encode($id_auesserung);
-	
+
 	wp_die();
 }
 
@@ -501,7 +501,12 @@ function returnGeoData(){
 	//$geo = $va_xxx->get_results("SELECT AsText(Geodaten) FROM Orte WHERE Id_Ort = 1 LIMIT 1");
 	if (isset($arr['poly'])) {
 	    $poly_id =  $arr['poly'];
-	    $geo = $va_xxx->get_results($va_xxx->prepare("SELECT AsText(Geodaten) , ST_AsText(ST_Centroid(Geodaten)) as center FROM orte WHERE Id_Ort = %d LIMIT 1" ,  $poly_id));
+
+	    $geo = $va_xxx->get_results($va_xxx->prepare("SELECT AsText(Geodaten) , ST_AsText(ST_Centroid(Geodaten)) as center FROM polygone_vereinfacht WHERE Id_Ort = %d LIMIT 1" ,  $poly_id));
+	    if(!$geo){
+	    	$geo = $va_xxx->get_results($va_xxx->prepare("SELECT AsText(Geodaten) , ST_AsText(ST_Centroid(Geodaten)) as center FROM orte WHERE Id_Ort = %d LIMIT 1" ,  $poly_id));
+	    }
+	    // $geo = $va_xxx->get_results($va_xxx->prepare("SELECT AsText(Geodaten) , ST_AsText(ST_Centroid(Geodaten)) as center FROM orte WHERE Id_Ort = %d LIMIT 1" ,  $poly_id));
 	} else {
 	     $poly_id = 1;
 	     $geo = $va_xxx->get_results($va_xxx->prepare("SELECT AsText(Geodaten) , ST_AsText(ST_Centroid(Geodaten)) as center FROM polygone_vereinfacht WHERE Id_Ort = %d AND Epsilon LIKE 0.0060 LIMIT 1" ,  $poly_id));
@@ -576,12 +581,12 @@ function returnKonzepte(){
 	 ORDER BY Basiskonzept DESC, IF(Basiskonzept, Konzept, IF(Tiefe IS NULL, 99, Tiefe)) ASC, Konzept ASC");*/
 
 	/*$konzepte = $va_xxx->get_results("SELECT Id_Konzept, IF($name_konzept = '', $beschreibung_konzept, $name_konzept) AS Konzept
-			FROM Konzepte LEFT JOIN a_konzept_tiefen a USING (Id_Konzept) 
+			FROM Konzepte LEFT JOIN a_konzept_tiefen a USING (Id_Konzept)
 			WHERE (Relevanz ) AND $beschreibung_konzept > ' '
 			ORDER BY Basiskonzept DESC, IF(Basiskonzept, Konzept, IF(Tiefe IS NULL, 99, Tiefe)) ASC, Konzept ASC");*/
 
 //Select Id_Konzept,IF(Name_D = '', Beschreibung_D, Name_D) AS Konzept from konzepte LEFT JOIN a_konzept_tiefen a USING (Id_Konzept) where exists (select vtbl_aeusserung_konzept.Id_Aeusserung from vtbl_aeusserung_konzept where konzepte.Id_Konzept = vtbl_aeusserung_konzept.Id_Konzept) OR Relevanz  AND Beschreibung_D > ' ' ORDER BY Basiskonzept DESC, IF(Basiskonzept, Konzept, IF(Tiefe IS NULL, 99, Tiefe)) ASC, Konzept ASC
-$konzepte = $va_xxx->get_results("Select Id_Konzept,IF($name_konzept = '', $beschreibung_konzept, $name_konzept) AS Konzept, va_phase from konzepte LEFT JOIN a_konzept_tiefen a USING (Id_Konzept) where exists (select vtbl_aeusserung_konzept.Id_Aeusserung from vtbl_aeusserung_konzept where konzepte.Id_Konzept = vtbl_aeusserung_konzept.Id_Konzept AND ( $beschreibung_konzept != '' OR $name_konzept != '') ) OR Relevanz  AND ( $beschreibung_konzept != '' OR $name_konzept != '') ORDER BY Basiskonzept DESC, IF(Basiskonzept, Konzept, IF(Tiefe IS NULL, 99, Tiefe)) ASC, Konzept ASC");
+$konzepte = $va_xxx->get_results("Select Id_Konzept,IF($name_konzept = '', $beschreibung_konzept, $name_konzept) AS Konzept, va_phase, QID from konzepte LEFT JOIN a_konzept_tiefen a USING (Id_Konzept) where exists (select vtbl_aeusserung_konzept.Id_Aeusserung from vtbl_aeusserung_konzept where konzepte.Id_Konzept = vtbl_aeusserung_konzept.Id_Konzept AND ( $beschreibung_konzept != '' OR $name_konzept != '') ) OR Relevanz  AND ( $beschreibung_konzept != '' OR $name_konzept != '') ORDER BY Basiskonzept DESC, IF(Basiskonzept, Konzept, IF(Tiefe IS NULL, 99, Tiefe)) ASC, Konzept ASC");
 
 	foreach ($konzepte as $value) {
 
@@ -596,10 +601,11 @@ $konzepte = $va_xxx->get_results("Select Id_Konzept,IF($name_konzept = '', $besc
 		$id_name_konzept = array(
 				"id" => $value->Id_Konzept,
 				"name" => $name,
-				"va_phase" => $va_phase
+				"va_phase" => $va_phase,
+				"qid" => $value->QID
 				/*"description" => $beschreibung*/
 		);
-		array_push($arrayConcepts,$id_name_konzept);	
+		array_push($arrayConcepts,$id_name_konzept);
 	}
 
 	/*$konzepte_nature = $va_xxx->get_results("Select Id_Konzept,IF($name_konzept = '', $beschreibung_konzept, $name_konzept) AS Konzept from konzepte LEFT JOIN a_konzept_tiefen a USING (Id_Konzept) where exists (select vtbl_aeusserung_konzept.Id_Aeusserung from vtbl_aeusserung_konzept where konzepte.Id_Konzept = vtbl_aeusserung_konzept.Id_Konzept) OR Relevanz  AND $beschreibung_konzept > ' ' ORDER BY Basiskonzept DESC, IF(Basiskonzept, Konzept, IF(Tiefe IS NULL, 99, Tiefe)) DESC, Konzept DESC");
@@ -607,14 +613,14 @@ $konzepte = $va_xxx->get_results("Select Id_Konzept,IF($name_konzept = '', $besc
 	foreach ($konzepte_nature as $value) {
 
 		$name = $value->Konzept;
-		
+
 		$id_name_konzept = array(
 				"id" => $value->Id_Konzept,
 				"name" => $name,
 				"va_phase" => 2
-				
+
 		);
-		array_push($arrayConcepts,$id_name_konzept);	
+		array_push($arrayConcepts,$id_name_konzept);
 	}*/
 
 
@@ -818,7 +824,7 @@ $top_locations = $va_xxx->get_results($va_xxx->prepare(
 
 			);
 	}
-	
+
 
 	$result = array();
 	$result['top_concepts'] = $top_concepts;
@@ -934,7 +940,7 @@ function returnAuesserungenGeoData(){
 				"id_geo" => $id_geo,
 				"tokenisiert" => $tokenisiert
 		);
-			
+
 
 		array_push($aeusserungen_daten,$aeusserung_daten);
 		array_push($count_data, $id_geo);
@@ -1062,12 +1068,12 @@ function getImage(){
 		$mediumID = $va_xxx->get_results("SELECT Id_Medium FROM vtbl_medium_konzept WHERE Id_Konzept = $konzept->Id_Konzept");
 		$arrayImageSrc = array();
 		if($mediumID != null){
-				
+
 			foreach ($mediumID as $medium) {
 
 				$imageSrc = $va_xxx->get_results("SELECT Dateiname, Ursprung FROM medien WHERE ID_Medium = $medium->Id_Medium");
 
-				
+
 				if($imageSrc!=null){
 					foreach ($imageSrc as $img) {
 						array_push($arrayImageSrc, array('image_name' => $img->Dateiname, 'image_scource' => $img->Ursprung) );
@@ -1224,7 +1230,7 @@ function save_user_language(){
 add_action('wp_ajax_nopriv_save_user_dialect', 'save_user_dialect');
 add_action('wp_ajax_save_user_dialect', 'save_user_dialect');
 function save_user_dialect(){
-	
+
 	$dialect = $_REQUEST['user_dialect'];
 	$user_name = $_REQUEST['user_name'];
 
@@ -1240,7 +1246,7 @@ function save_user_dialect(){
 		add_user_meta($user_id, 'current_dialect', $dialect);
 		$status = "new";
 	}
-	
+
 
 	echo json_encode($dialect . " " . $status);
 	wp_die();
@@ -1349,8 +1355,8 @@ function send_user_data(){
 			$current_user = null;
 
 		}
-		
-		
+
+
 
 		$language_is_set = false;
 
@@ -1376,7 +1382,7 @@ function send_user_data(){
 		    $language_is_set = true;
 		    $crowder_lang = $arr['lang'];//$_GET['lang'];
 		    switch($arr['lang']){
-		    	case 'deu': 
+		    	case 'deu':
 		    	 $crowder_lang = "0";
 		    	 break;
 		    	case 'fr':
@@ -1395,8 +1401,8 @@ function send_user_data(){
 		     $crowder_lang = "0";
 		}
 
-		
-		
+
+
 
 		$user_data = array(
 				'current_user' => $current_user,
@@ -1435,7 +1441,7 @@ function get_submited_answers_current_user(){
 		}else{
 			$user_name = null;
 		}
-	}	
+	}
 
 	if(current_user_can('va_change_cs_data')){   //|| is_admin()
 		$is_admin = true;
@@ -1480,11 +1486,11 @@ function get_submited_answers_current_user(){
 				$va_xxx->prepare("SELECT a.Id_Aeusserung,  a.Aeusserung , IF($name_konzept = '', $beschreibung_konzept, $name_konzept) AS Konzept , k.Id_Konzept, i.Id_Gemeinde, Erfasst_Von, Ortsname, Gesperrt	 FROM `aeusserungen` a left join informanten i on i.Id_Informant = a.Id_Informant left join vtbl_aeusserung_konzept vtbl on a.Id_Aeusserung = vtbl.Id_Aeusserung left join konzepte k on vtbl.Id_Konzept = k.Id_Konzept  WHERE `Erfasst_Von` = %s",  $user_name)
 				);
 
-		
+
 
 	}else if($user_name != null && $is_admin){
 		$submited_answers_q = $va_xxx->get_results("SELECT a.Id_Aeusserung,  a.Aeusserung , IF($name_konzept = '', $beschreibung_konzept, $name_konzept) AS Konzept , k.Id_Konzept, i.Id_Gemeinde, Erfasst_Von, Ortsname, Gesperrt	 FROM `aeusserungen` a left join informanten i on i.Id_Informant = a.Id_Informant left join vtbl_aeusserung_konzept vtbl on a.Id_Aeusserung = vtbl.Id_Aeusserung left join konzepte k on vtbl.Id_Konzept = k.Id_Konzept WHERE Id_Stimulus = 90322");
-		
+
 	}else{
 		echo json_encode(array("submited_answers_current_user" => [], "can_edit" => false));
 		wp_die();
@@ -1664,9 +1670,9 @@ function send_location_submited_asnswers_count(){
 
 
 	if (isset($arr['poly'])) {
-	
-	$loc_data_count = $va_xxx->get_results($va_xxx->prepare("SELECT count(a.Id_Aeusserung) as count, i.Id_Gemeinde as id , AsText(i.Georeferenz) as geo_data, i.Ortsname as location_name, o.Alpenkonvention as alpconvention FROM aeusserungen a 
-									left join informanten i on i.Id_Informant = a.Id_Informant 
+
+	$loc_data_count = $va_xxx->get_results($va_xxx->prepare("SELECT count(a.Id_Aeusserung) as count, i.Id_Gemeinde as id , AsText(i.Georeferenz) as geo_data, i.Ortsname as location_name, o.Alpenkonvention as alpconvention FROM aeusserungen a
+									left join informanten i on i.Id_Informant = a.Id_Informant
 									join A_Orte_Hierarchien_Erweitert erw on erw.Id_Ort = i.Id_Gemeinde
 									left join vtbl_aeusserung_konzept v on v.Id_Aeusserung = a.Id_Aeusserung
 									left join konzepte k on k.Id_Konzept = v.Id_Konzept
@@ -1678,13 +1684,13 @@ function send_location_submited_asnswers_count(){
 
 	}else{
 		/*get count of submited answers in locations*/
-		$loc_data_count = $va_xxx->get_results("SELECT count(a.Id_Aeusserung) as count, i.Id_Gemeinde as id , AsText(i.Georeferenz) as geo_data, i.Ortsname as location_name, o.Alpenkonvention as alpconvention FROM aeusserungen a 
-									left join informanten i on i.Id_Informant = a.Id_Informant 									
+		$loc_data_count = $va_xxx->get_results("SELECT count(a.Id_Aeusserung) as count, i.Id_Gemeinde as id , AsText(i.Georeferenz) as geo_data, i.Ortsname as location_name, o.Alpenkonvention as alpconvention FROM aeusserungen a
+									left join informanten i on i.Id_Informant = a.Id_Informant
 									left join vtbl_aeusserung_konzept v on v.Id_Aeusserung = a.Id_Aeusserung
 									left join konzepte k on k.Id_Konzept = v.Id_Konzept
 									left join orte o on o.Id_Ort = i.Id_Gemeinde
 
-									where i.Erhebung = 'Crowd' AND $beschreibung_konzept > ' ' AND o.Alpenkonvention = 1 
+									where i.Erhebung = 'Crowd' AND $beschreibung_konzept > ' ' AND o.Alpenkonvention = 1
 
 									group by i.Id_Gemeinde");
 	}
@@ -1789,7 +1795,7 @@ function get_submited_answers_current_location(){
 				"id_geo" => $id_geo,
 				"tokenisiert" => $tokenisiert
 		);
-			
+
 		$submited_answers_current_location[$id_aeusserung] = $aeusserung_daten;
 		//array_push($submited_answers_current_location,$aeusserung_daten);
 	}
@@ -1797,7 +1803,7 @@ function get_submited_answers_current_location(){
 	echo json_encode(array("submited_data" => $submited_answers_current_location, "can_edit" => $user_status) );
 
 	wp_die();
-}		
+}
 
 
 
@@ -1835,7 +1841,7 @@ function get_dialects(){
 	$all_dialects = array();
 
 	foreach ($dialect_query as $value) {
-		
+
 		$id_dialect = $value->Id_dialect;
 		$dialect_name = $value->Name;
 
@@ -1845,7 +1851,7 @@ function get_dialects(){
 				"name" => $dialect_name,
 
 		);
-			
+
 		array_push($all_dialects, $dialect);
 		//array_push($submited_answers_current_location,$aeusserung_daten);
 	}
@@ -1865,15 +1871,15 @@ function save_audio(){
 	$audio_id = $_REQUEST['submitted_answer_id'];
 
 	$uploads = wp_upload_dir();
-	
-	
+
+
 
 
 	if(isset($_FILES['file']) and !$_FILES['file']['error']){
 	    $fname = $audio_id . ".mp3";
 		$path = ($uploads['basedir']) . "/audio_recordings/";
-		
-		
+
+
 		$uploaded_file = move_uploaded_file($_FILES['file']['tmp_name'], $path . $fname);
 
 		//$path = wp_basename($uploads['basedir']) . "/audio_recordings/" . $audio_id . ".mp3";
@@ -1884,7 +1890,7 @@ function save_audio(){
 			'file' => $_FILES['file'],
 			'uploaded_file' => $uploaded_file,
 			'file_arr' => $_FILES
-		); 
+		);
 		//'test_call' => file_put_contents($path, $_FILES['file'])
 
 	}else{
@@ -1925,7 +1931,7 @@ function suggest_dialect(){
 
 	$dialect_name  = $_REQUEST['dialect'];
 
-	$dialect_to_save = array(	 		
+	$dialect_to_save = array(
 	 			'Name' => $dialect_name
 	 			);
 
@@ -1938,5 +1944,3 @@ function suggest_dialect(){
 
 	wp_die();
 }
-
-

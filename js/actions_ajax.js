@@ -1,8 +1,8 @@
 /**
  * Difines and performes Ajax Calls to the server for - loading data from the database, building global javascript arrays with that data and saving user's input.
  * @module Ajax_Calls
- * 
- * 
+ *
+ *
  */
 
 /**
@@ -73,7 +73,7 @@ var important_concepts_count;
 
 /**
  * not used
- * @deprecated 
+ * @deprecated
  * @type {Array}
  */
 var indexed_locations_aeusserungen_array = [];
@@ -106,7 +106,7 @@ var current_user;
  * Language Number choosen by logged in users.
  * @type {String}
  */
-var	crowder_lang; 
+var	crowder_lang;
 
 /**
  * Email Adress of the logged in user.
@@ -135,12 +135,12 @@ var change_question = ['Sie haben diese Antwort bereits abgegeben. Möchten Sie 
 		jQuery('#custom_backdrop').show();
 
 
-							
+
 							/**
 							 * Initiating the async calls to server.
 							 * @async
 							 * @function gets information about the user from the server
-							 * @return {Array} user_data     
+							 * @return {Array} user_data
 							 */
 							jQuery.ajax({
 								url: ajax_object.ajax_url,
@@ -155,7 +155,7 @@ var change_question = ['Sie haben diese Antwort bereits abgegeben. Möchten Sie 
 								 * Get number of importain concepts.
 								 * @async
 								 * @function gets information about the importaint concepts
-								 * @return {Array} important_concepts_count     
+								 * @return {Array} important_concepts_count
 								 */
 								jQuery.ajax({
 									url: ajax_object.ajax_url,
@@ -166,13 +166,13 @@ var change_question = ['Sie haben diese Antwort bereits abgegeben. Möchten Sie 
 									success : function( response ) {
 										important_concepts_count = JSON.parse(response);
 
-																												
+
 																 /**
 																 * Get and display AlpenKonventione Polygon
 																 * @namespace Ajaxs Calls
 																 * @async
 																 * @function gets alpine convention borders
-																 * @return {Array} border coordinates     
+																 * @return {Array} border coordinates
 																 */
 																 jQuery.ajax({
 																		url: ajax_object.ajax_url,
@@ -183,277 +183,321 @@ var change_question = ['Sie haben diese Antwort bereits abgegeben. Möchten Sie 
 																		},
 																		success : function( response ) {
 																			var response = JSON.parse(response);
-																			
+
 																			coords = response.polygon;
 																			center = response.center;
 																			addGeometryAlps(coords,center);
 	 																		initTool();
-																			
-																		}	
+
+																		}
 																	}); //konvention
 
-													
-											
+
+
 										}
 									});
 								}
 							});
-			
+
 
 	}); //document ready
 
-/** 
+/**
  * Gets values from all answer-input fields and performs an ajax call with the user's answer to be saved in the database. Performs all checks if all fields are filled correctly. And places a marker when the input is saved in the database.
  * @function saveWord
  */
-function saveWord(){
-		
-
-				
-				var input_word = jQuery("#user_input").val();
-				var location = jQuery('#location_span').html();
-				var location_id = jQuery('#location_span').attr('data-id_location');
-				var concept = jQuery('#word_span').html();
-				var concept_id = jQuery('#word_span').attr('data-id_concept');
-
-				if(!current_user_age){
-					current_user_age = "";
-				}
-
-				//error handling, if user changes the va_phase after choosing a concept form a certain va_phase
-				if(concepts_index_by_id[va_phase][concept_id]){
-					var concept_index = concepts_index_by_id[va_phase][concept_id].index;
-				}else{
-					if(va_phase == 1){
-						va_phase = 2;
-					}else{
-						va_phase = 1;
-					}
-					var concept_index = concepts_index_by_id[va_phase][concept_id].index;
-				}
-
-				
-
-
-				/*Check if fields for Konzept and Region are filled*/
-				if(input_word.localeCompare("") != 0  && location_id != null && concept_selected == true){
-
-			    stage = 5;
-		        jQuery('#submitanswer').popover('hide');	
-
-				var answer = {concept: concept, user_input : input_word , location: location, location_id:location_id };
-			
-					if(!isDuplicate_indexed(answer)){
-
-						/**
-						 * Gets user's ID. Used to generate a unique crowder_id cookie, when the user submits an answer.
-						 * @async
-						 * @function getUserID
-						 */
-						jQuery.ajax({
-							url : ajax_object.ajax_url  ,
-							type : 'POST',
-							data : {
-								action : 'getUserID',							
-							},
-							success : function( response ) {
-							
-							if(current_user==null)current_user = JSON.parse(response);
-
-							createCookie("crowder_id",current_user);		
-						/**
-						 * Send all data(location, location id, concept, concept id, user answer and current user id(not logged in users) or user name(logged in users)) to server.
-						 * @function save_word_async
-						 * @async
-						 */
-						jQuery.ajax({
-							url : ajax_object.ajax_url  ,
-							type : 'POST',
-							data : {
-								action : 'saveWord',
-								gemeinde : location,
-								gemeinde_id : location_id,
-								konzept : concept,
-								konzept_Id : concept_id,
-				       	        bezeichnung : input_word,
-				       	        current_user : current_user,
-				       	        current_language : current_language,
-				       	        current_dialect : selected_dialect,
-				       	        current_user_age: current_user_age
-
-							},
-							beforeSend: function(){
-								
-							},
-							success : function( response ) {
-
-								
-
-								var id_aeusserung = JSON.parse(response);
-
-								if(id_aeusserung == null) return;
-								
-								jQuery('#image_modal').modal('hide'); 
-
-										/**
-										* Load the location's polygon to be displayed on the map, when user's answer is successfully saved to the database.
-										* @function load_location_polygon
-										* @async
-										*/
-								        jQuery.ajax({
-									          url: ajax_object.ajax_url,
-									          type: 'POST',
-									          data: {
-									            action : 'getChoosenGemeinde',
-									            location_id : location_id,
-									            searchedGemeinde : location,
-									            concept : concept,
-									            concept_id : concept_id,
-									            bezeichnung : input_word
-									          },
-									          success : function( response ) {
-									          	//add the location and it's id, it they do not exist in the data tables.
-									          	var ob = {id:location_id,name:location};
-									          	if(include(locations, ob) !== true){
-									          		locations.push(ob);
-									          	}
-												
-
-												
-									        
-
-									          	session_answer_count ++;
-									          	if(!userLoggedIn)checkLoginPopUp();
-									          	
-									          	var answer = {concept: concept, user_input : input_word , location: location, id_auesserung: id_aeusserung,concept_id:concept_id,concept_index:concept_index};
-
-									          	submitedAnswers.push(answer);
-									          	submitedAnswers_indexed[id_aeusserung]= answer;
-												delete unanswered_concepts[concept_index];
-
-									          	var entry = {};
-									          	entry[id_aeusserung] = {author: current_user , id_aeusserung:id_aeusserung.toString(), id_concept:concept_id, id_geo:location_id, konzept:concept, ortsname:location, word:input_word, tokenisiert:"0"};
-												
-												if(aeusserungen_by_locationindex[location_id]==null){
-													aeusserungen_by_locationindex[location_id] = entry;
-												}
-
-												else{
-								          			aeusserungen_by_locationindex[location_id][id_aeusserung] = {author: current_user , id_aeusserung:id_aeusserung.toString(), id_concept:concept_id, id_geo:location_id, konzept:concept, ortsname:location, word:input_word, tokenisiert:"0"};
-												}		
-
-									  			remove_location_search_listener();
-									  			add_user_marker(JSON.parse(response),id_aeusserung);
-									  			change_feature_style(old_feature,check_user_aesserungen_in_location(location));
-
-									  			setTimeout(function() {
-
-										  			if(location_markers[location_id]){
-										  				change_marker(location_markers[location_id],1,"green");
-													}else{
-														var obj = JSON.parse(response);
-
-														var element = {count:"1", geo_data:{geo:obj.centerCoordinates,location_id:obj.location_id,userCheck:true},geo:obj.centerCoordinates,location_id:obj.location_id,userCheck:true,location_name:location};
-														display_location_markers(element);
-													}
-
-											     }, 300);
-
-									  			//prompt user to register/send data anonimously
-									  			if(Object.keys(submitedAnswers_indexed).length == 1){
-									  				setTimeout(function(){
-									  					openRegisterOrAnonymousModal();
-									  				},1000);
-									  			}
-
-									            jQuery('#word_span').data("id_concept",null);
-
-										            jQuery('.row_1').fadeOut().fadeIn();
-										            jQuery('.row_2').fadeOut(function(){
-										            		   jQuery('#submitanswer').popover('hide');
-
-										            		   jQuery('#user_input').val("");
-										           			   jQuery('#word_span').text(the_word_concept[current_language]);
-						           			   	               setTimeout(function() {
-
-						           			   	               			jQuery('#word_span').popover('show');
-
-				           			   	     	          			     	jQuery('.pop_word_span').parent().on('click',function(){
-						                        								 handleWordSpanClick();					             
-						               									     }).addClass('c_hover'); 
-						           			   	           				}, 1000);
-						           			   	               		    process_restarted = true;
-
-										            }).fadeIn();
-									
-										            concept_selected = false;
-										       	    word_entered = false;
-									            	stage = 3;
-									           
-									            	deSelectTableEntry(concept_index);
-
-		            			  				        var entry = num_of_answers_by_id[parseInt(concept_id)];
-        	     			             			    if(entry==null) num_of_answers_by_id[parseInt(concept_id)] = 1;
-    													else num_of_answers_by_id[parseInt(concept_id)] +=1;
-
-        	     			             			checkTableEntry(concept_id);
-
- 			             	
-        	     			             			var row = jQuery(datatable_concepts.row(concept_index).node());
-        	     			             			if(row.find('.num_of_answers').length==0){
-        	     			             				row.find('.dataparent').append(jQuery('<div class="num_of_answers">1</div>'));
-        	     			             			}
-
-        	     			             			else{
-        	     			             				row.find('.num_of_answers').text(num_of_answers_by_id[parseInt(concept_id)]);
-        	     			             			}
-
-        	     			           
-									      			current_concept_index[va_phase] = -1;
-
-									      			var ua = navigator.userAgent.toLowerCase();
-													var isAndroid = ua.indexOf("android") > -1; 
-													if(isAndroid) {
-														map.panTo(location_markers[location_id].getPosition());
-													}
-									      			
-									          }
-								          });
-
-							}
-						});
-
-						}});
-					}else{
-
-						for (var key in submitedAnswers_indexed) {
-						  if (submitedAnswers_indexed.hasOwnProperty(key)) {
-						  	 if(input_word.localeCompare(submitedAnswers_indexed[key].user_input) == 0 &&  concept.localeCompare(submitedAnswers_indexed[key].concept) == 0){
-								var id_auesserung = submitedAnswers_indexed[key].id_auesserung;
-								var concept_id = submitedAnswers_indexed[key].concept_id;
-								break;
-							}
-						  }
-						}
-
-
-					 editInputA(id_auesserung,concept_id,location_id,concept,false);
-
-
-	
-					
-				}
-				}else{
-					jQuery('.message_modal_content').text(user_input_not_full[current_language]);
-					jQuery('#message_modal').modal({
-	                   backdrop: 'static',
-	                   keyboard: false
-	                });
-				}
+function saveWord() {
 
 
 
-	}
+  var input_word = jQuery("#user_input").val();
+  var location = jQuery('#location_span').html();
+  var location_id = jQuery('#location_span').attr('data-id_location');
+  var concept = jQuery('#word_span').html();
+  var concept_id = jQuery('#word_span').attr('data-id_concept');
+
+  if (!current_user_age) {
+    current_user_age = "";
+  }
+
+  //error handling, if user changes the va_phase after choosing a concept form a certain va_phase
+  if (get_table_index_by_va_phase(concept_id)) { // concepts_index_by_id[va_phase][concept_id]
+    var concept_index = get_table_index_by_va_phase(concept_id);//concepts_index_by_id[va_phase][concept_id].index;
+  } else {
+    if (va_phase == 1) {
+      va_phase = 2;
+    } else {
+      va_phase = 1;
+    }
+    var concept_index = get_table_index_by_va_phase(concept_id);//concepts_index_by_id[va_phase][concept_id].index;
+  }
+
+
+
+
+  /*Check if fields for Konzept and Region are filled*/
+  if (input_word.localeCompare("") != 0 && location_id != null && concept_selected == true) {
+
+    stage = 5;
+    jQuery('#submitanswer').popover('hide');
+
+    var answer = {
+      concept: concept,
+      user_input: input_word,
+      location: location,
+      location_id: location_id
+    };
+
+    if (!isDuplicate_indexed(answer)) {
+
+      /**
+       * Gets user's ID. Used to generate a unique crowder_id cookie, when the user submits an answer.
+       * @async
+       * @function getUserID
+       */
+      jQuery.ajax({
+        url: ajax_object.ajax_url,
+        type: 'POST',
+        data: {
+          action: 'getUserID',
+        },
+        success: function(response) {
+
+          if (current_user == null) current_user = JSON.parse(response);
+
+          createCookie("crowder_id", current_user);
+          /**
+           * Send all data(location, location id, concept, concept id, user answer and current user id(not logged in users) or user name(logged in users)) to server.
+           * @function save_word_async
+           * @async
+           */
+          jQuery.ajax({
+            url: ajax_object.ajax_url,
+            type: 'POST',
+            data: {
+              action: 'saveWord',
+              gemeinde: location,
+              gemeinde_id: location_id,
+              konzept: concept,
+              konzept_Id: concept_id,
+              bezeichnung: input_word,
+              current_user: current_user,
+              current_language: current_language,
+              current_dialect: selected_dialect,
+              current_user_age: current_user_age
+
+            },
+            beforeSend: function() {
+
+            },
+            success: function(response) {
+
+
+
+              var id_aeusserung = JSON.parse(response);
+
+              if (id_aeusserung == null) return;
+
+              jQuery('#image_modal').modal('hide');
+
+              /**
+               * Load the location's polygon to be displayed on the map, when user's answer is successfully saved to the database.
+               * @function load_location_polygon
+               * @async
+               */
+              jQuery.ajax({
+                url: ajax_object.ajax_url,
+                type: 'POST',
+                data: {
+                  action: 'getChoosenGemeinde',
+                  location_id: location_id,
+                  searchedGemeinde: location,
+                  concept: concept,
+                  concept_id: concept_id,
+                  bezeichnung: input_word
+                },
+                success: function(response) {
+                  //add the location and it's id, it they do not exist in the data tables.
+                  var ob = {
+                    id: location_id,
+                    name: location
+                  };
+                  if (include(locations, ob) !== true) {
+                    locations.push(ob);
+                  }
+
+
+
+
+
+                  session_answer_count++;
+                  if (!userLoggedIn) checkLoginPopUp();
+
+                  var answer = {
+                    concept: concept,
+                    user_input: input_word,
+                    location: location,
+                    id_auesserung: id_aeusserung,
+                    concept_id: concept_id,
+                    concept_index: concept_index
+                  };
+
+                  submitedAnswers.push(answer);
+                  submitedAnswers_indexed[id_aeusserung] = answer;
+                  delete unanswered_concepts[concept_index];
+
+                  var entry = {};
+                  entry[id_aeusserung] = {
+                    author: current_user,
+                    id_aeusserung: id_aeusserung.toString(),
+                    id_concept: concept_id,
+                    id_geo: location_id,
+                    konzept: concept,
+                    ortsname: location,
+                    word: input_word,
+                    tokenisiert: "0"
+                  };
+
+                  if (aeusserungen_by_locationindex[location_id] == null) {
+                    aeusserungen_by_locationindex[location_id] = entry;
+                  } else {
+                    aeusserungen_by_locationindex[location_id][id_aeusserung] = {
+                      author: current_user,
+                      id_aeusserung: id_aeusserung.toString(),
+                      id_concept: concept_id,
+                      id_geo: location_id,
+                      konzept: concept,
+                      ortsname: location,
+                      word: input_word,
+                      tokenisiert: "0"
+                    };
+                  }
+
+                  remove_location_search_listener();
+                  add_user_marker(JSON.parse(response), id_aeusserung);
+                  change_feature_style(old_feature, check_user_aesserungen_in_location(location));
+
+                  setTimeout(function() {
+
+                    if (location_markers[location_id]) {
+                      change_marker(location_markers[location_id], 1, "green");
+                    } else {
+                      var obj = JSON.parse(response);
+
+                      var element = {
+                        count: "1",
+                        geo_data: {
+                          geo: obj.centerCoordinates,
+                          location_id: obj.location_id,
+                          userCheck: true
+                        },
+                        geo: obj.centerCoordinates,
+                        location_id: obj.location_id,
+                        userCheck: true,
+                        location_name: location
+                      };
+                      display_location_markers(element);
+                    }
+
+                  }, 300);
+
+                  //prompt user to register/send data anonimously
+                  if (Object.keys(submitedAnswers_indexed).length == 1) {
+                    setTimeout(function() {
+                      openRegisterOrAnonymousModal();
+                    }, 1000);
+                  }
+
+                  jQuery('#word_span').data("id_concept", null);
+
+                  jQuery('.row_1').fadeOut().fadeIn();
+                  jQuery('.row_2').fadeOut(function() {
+                    jQuery('#submitanswer').popover('hide');
+
+                    jQuery('#user_input').val("");
+                    jQuery('#word_span').text(the_word_concept[current_language]);
+                    setTimeout(function() {
+
+                      jQuery('#word_span').popover('show');
+
+                      jQuery('.pop_word_span').parent().on('click', function() {
+                        handleWordSpanClick();
+                      }).addClass('c_hover');
+                    }, 1000);
+                    process_restarted = true;
+
+                  }).fadeIn();
+
+                  concept_selected = false;
+                  word_entered = false;
+                  stage = 3;
+
+                  deSelectTableEntry(concept_index);
+
+                  var entry = num_of_answers_by_id[parseInt(concept_id)];
+                  if (entry == null) num_of_answers_by_id[parseInt(concept_id)] = 1;
+                  else num_of_answers_by_id[parseInt(concept_id)] += 1;
+
+                  checkTableEntry(concept_id);
+
+
+                  var row = jQuery(datatable_concepts.row(concept_index).node());
+                  if (row.find('.num_of_answers').length == 0) {
+                    row.find('.dataparent').append(jQuery('<div class="num_of_answers">1</div>'));
+                    if(row.find(".wiki_info").length == 1) row.find('.num_of_answers').addClass("answers_with_wiki");
+                  } else {
+                    row.find('.num_of_answers').text(num_of_answers_by_id[parseInt(concept_id)]);
+                    if(row.find(".wiki_info").length == 1) row.find('.num_of_answers').addClass("answers_with_wiki");
+                  }
+
+
+                  // current_concept_index[va_phase] = -1;
+                  current_concept_index = -1;
+
+                  var ua = navigator.userAgent.toLowerCase();
+                  var isAndroid = ua.indexOf("android") > -1;
+                  if (isAndroid) {
+                    map.panTo(location_markers[location_id].getPosition());
+                  }
+
+                }
+              });
+
+            }
+          });
+
+        }
+      });
+    } else {
+
+      for (var key in submitedAnswers_indexed) {
+        if (submitedAnswers_indexed.hasOwnProperty(key)) {
+          if (input_word.localeCompare(submitedAnswers_indexed[key].user_input) == 0 && concept.localeCompare(submitedAnswers_indexed[key].concept) == 0) {
+            var id_auesserung = submitedAnswers_indexed[key].id_auesserung;
+            var concept_id = submitedAnswers_indexed[key].concept_id;
+            break;
+          }
+        }
+      }
+
+
+      editInputA(id_auesserung, concept_id, location_id, concept, false);
+
+
+
+
+    }
+  } else {
+    jQuery('.message_modal_content').text(user_input_not_full[current_language]);
+    jQuery('#message_modal').modal({
+      backdrop: 'static',
+      keyboard: false
+    });
+  }
+
+
+
+}
 /**
  * Used in saveWord(), checks if an location object allready exists in the locations array
  * @param  {Array} arr [description]
@@ -469,7 +513,7 @@ function include(arr, obj) {
 /**
  * Loops through all submitted answers and performs fill_answers() on each of them.
  * @param  {Array} array_submitted_answers An array containg submited answers by the user.
- * 
+ *
  */
 function fill_submitted_answers(array_submitted_answers){
 	for(var i = 0; i < array_submitted_answers.length; i++) {
@@ -481,7 +525,7 @@ function fill_submitted_answers(array_submitted_answers){
 /**
  * Adds an object, containing - Concept(and id), submited answer(and id), location and author of the submitted answer, to submitedAnswers(global array).
  * @param  {Object} obj Contains a single concept-submitted entry, that the user has previously created.
- * 
+ *
  */
 function fill_answers(obj){
 	var concept_id = obj.id_concept;
@@ -492,11 +536,11 @@ function fill_answers(obj){
 	var author = obj.author;
 	if(author.localeCompare(current_user) == 0 && author.localeCompare("anonymousCrowder_90322") != 0){
 
-		var concept_idx = concepts_index_by_id[va_phase][parseInt(concept_id)].index;
+		var concept_idx = get_table_index_by_va_phase(concept_id);//concepts_index_by_id[va_phase][parseInt(concept_id)].index;
 
-	    var answer = {concept: concept, user_input : word_inputed , location: location_name , id_auesserung: id_auesserung ,concept_id:concept_id,concept_index:concept_idx};
+	  var answer = {concept: concept, user_input : word_inputed , location: location_name , id_auesserung: id_auesserung ,concept_id:concept_id,concept_index:concept_idx};
 	  submitedAnswers.push(answer);
-    }
+  }
 }
 
 /**
@@ -519,15 +563,15 @@ function create_submited_answers_index_array(arrayA,can_edit){
 			var location_name = obj.ortsname;
 			var id_auesserung = obj.id_aeusserung;
 			var author = obj.author;
-			
+
 			if((author.localeCompare(current_user) == 0 && author.localeCompare("anonymousCrowder_90322") != 0) || is_admin){
 
-				var concept_idx = concepts_index_by_id[va_phase][parseInt(concept_id)].index;
-				
+				var concept_idx = get_table_index_by_va_phase(concept_id);//concepts_index_by_id[va_phase][parseInt(concept_id)].index;
+
 			    var answer = {concept: concept, user_input : word_inputed , location: location_name , id_auesserung: id_auesserung ,concept_id:concept_id,concept_index:concept_idx};
 		 		result[parseInt(id_auesserung)] = answer;
 	   		}
-		
+
 	}
 
 	return result;
@@ -546,7 +590,7 @@ function get_aeussetungen_locations_curLang(arrayA,can_edit,callback){
 	  }
 	}
 
-	
+
 	setTimeout(function() {
 
 		jQuery('#custom_backdrop').fadeOut('slow',function(){
@@ -554,7 +598,7 @@ function get_aeussetungen_locations_curLang(arrayA,can_edit,callback){
 	    });
 	  	console.log("ALL POLYGONS LOADED");
 	 	callback();
-	   
+
 	    //jQuery('#custom_backdrop').fadeOut(200,function(){jQuery(this).remove(); console.log("hide custom_backdrop");});
 	    //jQuery('#custom_backdrop').remove();
 	    //console.log(jQuery('#custom_backdrop'));
@@ -621,7 +665,7 @@ function returnChangeInput(){
  * @param  {Integer} concept_id    Concept Id
  * @param  {Integer} id_location   Location Id
  * @param  {Integer} row_to_update The row number from the data table that will be updated
- * 
+ *
  */
 function updateInput(concept, id_auesserung,concept_id,id_location,row_to_update){
 
@@ -636,13 +680,13 @@ function updateInput(concept, id_auesserung,concept_id,id_location,row_to_update
 	}
 
 
-	if(new_auesserung.localeCompare("") != 0 && !stop){	
+	if(new_auesserung.localeCompare("") != 0 && !stop){
 
-	if(row_to_update){		
-		row_to_update.find('td:nth-child(2)').first().text("\""+new_auesserung+"\"");	
+	if(row_to_update){
+		row_to_update.find('td:nth-child(2)').first().text("\""+new_auesserung+"\"");
 	}
 
-    updateAnswers_indexed(id_auesserung,new_auesserung,id_location);	
+    updateAnswers_indexed(id_auesserung,new_auesserung,id_location);
 
 	jQuery.ajax({
 							url: ajax_object.ajax_url,
@@ -653,13 +697,13 @@ function updateInput(concept, id_auesserung,concept_id,id_location,row_to_update
 								new_auesserung : new_auesserung
 							},
 							success : function( response ) {
-								
+
 								if(info_window_answer_change){
 									jQuery("#i_span_1").text('"' + new_auesserung + '"' );
 								}
 								info_window_answer_change = false;
 							}
-					}); 
+					});
 
      jQuery('#input_modal').modal('hide');
 
@@ -674,13 +718,12 @@ function updateInput(concept, id_auesserung,concept_id,id_location,row_to_update
  * @param  {String} ort           Location name
  * @param  {Integer} concept_id    Concept Id
  * @param  {Integer} location_id   Location Id
- * 
+ *
  */
 function deleteInput(id_auesserung, ort, concept_id, location_id){
 
 	deleteFromAnswers_indexed(id_auesserung, location_id);
 	change_marker(location_markers[location_id],-1,"green");
-
 
 	num_of_answers_by_id[concept_id]--;
 	if(num_of_answers_by_id[concept_id]==0){
@@ -708,7 +751,7 @@ function deleteInput(id_auesserung, ort, concept_id, location_id){
 				current_user = null;
 			}
 		}
-	}); 
+	});
 
 	if(old_feature != null && ort.localeCompare(old_feature.getProperty('location')) == 0 ) {
 		change_feature_style(old_feature,check_user_aesserungen_in_location(ort));
@@ -722,10 +765,10 @@ function deleteInput(id_auesserung, ort, concept_id, location_id){
  * Delete user's answer from submitedAnswers_indexed and aeusserungen_by_locationindex.
  * @param  {Int} id_auesserung Submited answer Id
  * @param  {Int} id_location   Location Id
- * 
+ *
  */
 function deleteFromAnswers_indexed(id_auesserung,id_location){
-	
+
 	delete submitedAnswers_indexed[id_auesserung];
 
 	delete aeusserungen_by_locationindex[id_location][id_auesserung];
@@ -738,10 +781,10 @@ function deleteFromAnswers_indexed(id_auesserung,id_location){
  * @param  {Int} id_auesserung Submited answer Id
  * @param  {String} input         User's Input
  * @param  {Int} id_location   Location Id
- * 
+ *
  */
 function updateAnswers_indexed(id_auesserung,input,id_location){
-	submitedAnswers_indexed[id_auesserung].user_input = input;	
+	submitedAnswers_indexed[id_auesserung].user_input = input;
 	aeusserungen_by_locationindex[id_location][id_auesserung].word = input;
 }
 
@@ -751,7 +794,7 @@ function updateAnswers_indexed(id_auesserung,input,id_location){
 // 		for(var i = 0; i < markers.length; i++){
 // 			if(marker === markers[i].marker){
 
-		
+
 // 				var auesserung_id = marker.id_auesserung;
 // 				var ort = marker.location;
 // 				var concept = marker.concept;
@@ -760,7 +803,7 @@ function updateAnswers_indexed(id_auesserung,input,id_location){
 
 // 			}
 // 		}
-				
+
 // 		jQuery('#input_modal').modal('hide');
 
 // }
@@ -769,12 +812,12 @@ function updateAnswers_indexed(id_auesserung,input,id_location){
 /**
  * [deleteFromConceptTable description]
  * @param  {Int} _concept_id [description]
- * 
+ *
  */
 function deleteFromConceptTable(_concept_id){
 
-var table_index_t = concepts_index_by_id[va_phase][parseInt(_concept_id)].index;
-var name  = concepts_index_by_id[va_phase][parseInt(_concept_id)].name;
+var table_index_t = get_table_index_by_va_phase(_concept_id);//concepts_index_by_id[va_phase][parseInt(_concept_id)].index;
+//var name  = concepts_index_by_id[va_phase][parseInt(_concept_id)].name;
 var row = datatable_concepts.row(table_index_t).node();
 
 jQuery(row).removeClass('green_row');
@@ -787,54 +830,59 @@ jQuery(row).find('.dataspan').find('.fa-check').remove();
 			jQuery(row).find('.dataspan').prepend(icon);
 		}
 unanswered_concepts[table_index_t] = concepts_cur_lang[table_index_t]; //add concept back to unanswered list;
-		
+
 }
 
 
 /**
  * [checkTableEntry description]
  * @param  {Int} _concept_id [description]
- * 
+ *
  */
-function checkTableEntry(_concept_id){
-	// console.log(_concept_id);
-	// console.log(concepts_index_by_id[va_phase]);
-	// console.log(concepts_index_by_id[va_phase][parseInt(_concept_id)]);
-	if(concepts_index_by_id[va_phase][parseInt(_concept_id)]){
-	if(va_phase == concepts_index_by_id[va_phase][parseInt(_concept_id)].va_phase){
-		var table_index_t = concepts_index_by_id[va_phase][parseInt(_concept_id)].index;
+function checkTableEntry(_concept_id) {
 
-		// console.log("Table index: " + table_index_t);
-
-		var row = datatable_concepts.row(table_index_t).node();
-		jQuery(row).addClass('green_row');
-
-		var icon = jQuery('<i class="fa fa-check" aria-hidden="true"></i>');
-
-			if(jQuery(row).find('.fa-check').length==0){
-		        jQuery(row).find('.dataspan').prepend(icon);
-			}
+  for (var i = 0; i < active_va_phases.length; i++) {
+    if(active_va_phases.length == 2){
+      cur_va_phases = 0;
+    }else{
+      cur_va_phases = active_va_phases[i];
+    }
 
 
-		jQuery(row).find('.fa-exclamation-triangle').remove();
+    if (concepts_index_by_id[cur_va_phases][parseInt(_concept_id)]) {
+      //if (va_phase == concepts_index_by_id[va_phase][parseInt(_concept_id)].va_phase) {
+      var table_index_t = get_table_index_by_va_phase(_concept_id);//concepts_index_by_id[cur_va_phases][parseInt(_concept_id)].index; // va_phase
 
 
-			if(jQuery(row).find('.num_of_answers').length==0){
-				jQuery(row).find('.dataparent').append(jQuery('<div class="num_of_answers">1</div>'));
-			}
+      var row = datatable_concepts.row(table_index_t).node();
+      jQuery(row).addClass('green_row');
 
-			else{
-				jQuery(row).find('.num_of_answers').text(num_of_answers_by_id[parseInt(_concept_id)]);
-			}
-			
-	}	
-	}
+      var icon = jQuery('<i class="fa fa-check" aria-hidden="true"></i>');
+
+      if (jQuery(row).find('.fa-check').length == 0) {
+        jQuery(row).find('.dataspan').prepend(icon);
+      }
+
+
+      jQuery(row).find('.fa-exclamation-triangle').remove();
+
+      if (jQuery(row).find('.num_of_answers').length == 0) {
+        jQuery(row).find('.dataparent').append(jQuery('<div class="num_of_answers">1</div>'));
+        if (jQuery(row).find(".wiki_info").length == 1) jQuery(row).find('.num_of_answers').addClass("answers_with_wiki");
+      } else {
+        jQuery(row).find('.num_of_answers').text(num_of_answers_by_id[parseInt(_concept_id)]);
+        if (jQuery(row).find(".wiki_info").length == 1) jQuery(row).find('.num_of_answers').addClass("answers_with_wiki");
+      }
+
+      //}
+    }
+  }
 }
 
 /**
  * [selectTableEntry description]
  * @param  {Int} table_index index of the selected entry in the data table
- * 
+ *
  */
 function selectTableEntry(table_index){
 
@@ -855,7 +903,7 @@ jQuery(row).find('.dataparent').addClass('list_selected_concept');
 /**
  * [deSelectTableEntry description]
  * @param  {Int} table_index [description]
- * 
+ *
  */
 function deSelectTableEntry(table_index){
 
@@ -883,7 +931,7 @@ function checkEnteredConcepts(){
 
 /**
  * [checkEnteredConcepts_indexed description]
- * 
+ *
  */
 function checkEnteredConcepts_indexed(){
 	for (var key in submitedAnswers_indexed) {
@@ -897,7 +945,7 @@ function checkEnteredConcepts_indexed(){
 /**
  * Marks the input field red if user tries to submit the same answer or an empty field, when changing his answer.
  * @param  {String} input [description]
- * 
+ *
  */
 function markInputRed(input){
 	/*input field turns red for 1 sec*/
@@ -975,7 +1023,7 @@ function isDuplicate_indexed(answer){
 /**
  * check if string contains a substring
  * @param  {String} needle [description]
- * 
+ *
  */
 var contains = function(needle) {
     // Per spec, the way to identify NaN is that it is not equal to itself
@@ -1009,7 +1057,7 @@ var contains = function(needle) {
  * @param  {String} name  [description]
  * @param  {String} value [description]
  * @param  {Int} days  [description]
- * 
+ *
  */
 function createCookie(name,value,days) {
 	if (days) {
@@ -1040,7 +1088,7 @@ function readCookie(name) {
 /**
  * Delete cookie.
  * @param  {String} name [description]
- * 
+ *
  */
 function eraseCookie(name) {
 	createCookie(name,"",-1);
@@ -1063,7 +1111,7 @@ function isEmpty(obj) {
 /**
  * Saves the choosen language of the user in the database.
  * @param  {String} user_name [description]
- * 
+ *
  */
 function userRegisterDone(user_name,user_age,anonymous_data){
 
@@ -1100,7 +1148,7 @@ function userRegisterDone(user_name,user_age,anonymous_data){
 				console.log("Language Added");
 				console.log(JSON.parse(response));
 			}
-	}); 
+	});
 }
 
 function save_user_dialect(user_name){
@@ -1119,14 +1167,14 @@ function save_user_dialect(user_name){
 				console.log("Dialect Added");
 				console.log(JSON.parse(response));
 			}
-	}); 
+	});
 }
 
 
 /**
  * Saves user data in global variables.
  * @param  {Object} obj [description]
- * 
+ *
  */
 function declare_user_data(obj){
 	userLoggedIn = obj.userLoggedIn;
@@ -1134,7 +1182,7 @@ function declare_user_data(obj){
 		language_is_set = obj.language_is_set ;
 		anonymousCrowder = false ;
 		current_user = obj.current_user ;
-		crowder_lang =  obj.crowder_lang; 
+		crowder_lang =  obj.crowder_lang;
 		user_email = obj.user_email;
 		selected_dialect = obj.crowder_dialect;
 		current_user_age = obj.crowder_age;
@@ -1150,7 +1198,7 @@ function declare_user_data(obj){
 
 /**
  * Check if user(only for not logged in users) has submited answers and delete crowder_id cookie if he has no answers.
- * 
+ *
  */
 function check_user_aeusserungen(){
 	if(isEmpty(submitedAnswers_indexed) && !userLoggedIn){
@@ -1162,82 +1210,79 @@ function check_user_aeusserungen(){
 /**
  * Checks if the user has any answers in the current location. This is used for changing the color of the location marker: blue - user has not entered a answer in the location, green - user has entered an answer in that location.
  * @param  {String} location [description]
- * 
+ *
  */
-function check_user_aesserungen_in_location(location){
-	var has_aeusserungen = false;
+function check_user_aesserungen_in_location(location) {
+  var has_aeusserungen = false;
 
-	for (var key in submitedAnswers_indexed) {
-					  if (submitedAnswers_indexed.hasOwnProperty(key)) {
-					  	 if(location.localeCompare(submitedAnswers_indexed[key].location) == 0){
-							has_aeusserungen = true;					
-							break;
-						}
- 					 }
-	}
-	return has_aeusserungen;
+  for (var key in submitedAnswers_indexed) {
+    if (submitedAnswers_indexed.hasOwnProperty(key)) {
+      if (location.localeCompare(submitedAnswers_indexed[key].location) == 0) {
+        has_aeusserungen = true;
+        break;
+      }
+    }
+  }
+  return has_aeusserungen;
 }
 
 
 ///Ajax Calls
 
-function get_submited_answers(callback){
+function get_submited_answers(callback) {
 
-        if(!userLoggedIn){
-                          addLoginToolTip();
-                          startLoginTimer();
-        }              
+  if (!userLoggedIn) {
+    addLoginToolTip();
+    startLoginTimer();
+  }
 
-         check_user_aeusserungen();
-        
-		jQuery.ajax({
-                    url: ajax_object.ajax_url,
-                    type: 'POST',
-                    data: {
-                      action : 'send_location_submited_asnswers_count',
-                      lang : current_language
-                    },
-                    success : function( response ) {
-                    	var data = JSON.parse(response);
-		                var location_data_count = data.data_count;
-		                var is_admin = data.can_edit;
+  check_user_aeusserungen();
 
-						get_aeussetungen_locations_curLang(location_data_count,is_admin,callback);
+  jQuery.ajax({
+    url: ajax_object.ajax_url,
+    type: 'POST',
+    data: {
+      action: 'send_location_submited_asnswers_count',
+      lang: current_language
+    },
+    success: function(response) {
+      var data = JSON.parse(response);
+      var location_data_count = data.data_count;
+      var is_admin = data.can_edit;
 
-	                    aeusserungen_by_locationindex = new Object();
-	                  }});
+      get_aeussetungen_locations_curLang(location_data_count, is_admin, callback);
 
-                 
+      aeusserungen_by_locationindex = new Object();
+    }
+  });
+
+
 }
 
-function get_submited_answers_current_location(location_id,marker){
+function get_submited_answers_current_location(location_id, marker) {
 
-		jQuery.ajax({
-	                    url: ajax_object.ajax_url,
-	                    type: 'POST',
-	                    data: {
-	                      action : 'get_submited_answers_current_location',
-	                      lang : current_language,
-	                      location_id : location_id
-	                    },
-	                    success : function( response ) {
-	                    	
-	                    	var data = JSON.parse(response);
-	                    	var submited_anwerts_current_location = data.submited_data;
-	                    	var is_admin = data.can_edit;
-	                    	aeusserungen_by_locationindex[location_id] = submited_anwerts_current_location;
-	                    	
+  jQuery.ajax({
+    url: ajax_object.ajax_url,
+    type: 'POST',
+    data: {
+      action: 'get_submited_answers_current_location',
+      lang: current_language,
+      location_id: location_id
+    },
+    success: function(response) {
 
-	  						//jQuery('#custom_backdrop i').css('top','0px'); 
-	  						//jQuery('#custom_backdrop').hide().css('background','');
-							jQuery('#custom_backdrop').fadeOut('slow');   
-	                    	openLocationListModal(marker);
+      var data = JSON.parse(response);
+      var submited_anwerts_current_location = data.submited_data;
+      var is_admin = data.can_edit;
+      aeusserungen_by_locationindex[location_id] = submited_anwerts_current_location;
 
+      //jQuery('#custom_backdrop i').css('top','0px');
+      //jQuery('#custom_backdrop').hide().css('background','');
+      jQuery('#custom_backdrop').fadeOut('slow');
+      openLocationListModal(marker);
 
-
-	                    }
-	                });
-	
+    }
+  });
 
 }
 
@@ -1258,8 +1303,8 @@ function get_submited_answers_current_user(){
 	                    	add_submited_answers_to_index_submitedAnswers_array(submited_answers_current_user,is_admin);
 
 	                     	num_of_answers_by_id = createAnswersToEntryNumbers(submitedAnswers_indexed);
-	                     	checkEnteredConcepts_indexed(); 
-	                    	
+	                     	checkEnteredConcepts_indexed();
+
 	                    	populate_concept_span(function(){
         						console.log("test running")
         					});
@@ -1286,74 +1331,86 @@ function add_submited_answers_to_index_submitedAnswers_array(arrayA,can_edit){
 			var location_name = obj.ortsname;
 			var id_auesserung = obj.id_aeusserung;
 			var author = obj.author;
-			
-			if((author.localeCompare(current_user) == 0 && author.localeCompare("anonymousCrowder_90322") != 0) || is_admin){
-				
 
-				//var concept_idx = concepts_index_by_id[va_phase][parseInt(concept_id)].index;
-				var concept_idx = get_table_index_by_va_phase(parseInt(concept_id)); 
+			if((author.localeCompare(current_user) == 0 && author.localeCompare("anonymousCrowder_90322") != 0) || is_admin){
+
+
+				var concept_idx = get_table_index_by_va_phase(parseInt(concept_id));
 
 
 			    var answer = {concept: concept, user_input : word_inputed , location: location_name , id_auesserung: id_auesserung ,concept_id:concept_id,concept_index:concept_idx};
 		 		submitedAnswers_indexed[parseInt(id_auesserung)] = answer;
 	   		}
-		
+
 	}
 
-	
+
 }
 
-function get_table_index_by_va_phase(_concept_id){
+function get_table_index_by_va_phase(_concept_id) {
 
-	if(concepts_index_by_id[va_phase][parseInt(_concept_id)]){
-		var index = concepts_index_by_id[va_phase][parseInt(_concept_id)].index;
+  // if (concepts_index_by_id[va_phase][parseInt(_concept_id)]) {
+  //   var index = concepts_index_by_id[va_phase][parseInt(_concept_id)].index;
+  // } else {
+  //
+  //   if (va_phase == 1) {
+  //     var v = 2;
+  //   } else {
+  //     var v = 1;
+  //   }
+  //
+  //
+  //   var index = concepts_index_by_id[v][parseInt(_concept_id)].index;
+  //
+  // }
+
+  var index;
+
+  for (var i = 0; i < active_va_phases.length; i++) {
+    if(active_va_phases.length == 2){
+      cur_va_phases = 0;
+    }else{
+      cur_va_phases = active_va_phases[i];
+    }
+
+    if (concepts_index_by_id[cur_va_phases][parseInt(_concept_id)]) {
+      index = concepts_index_by_id[cur_va_phases][parseInt(_concept_id)].index;
+    }
 
 
-	}else{
+  }
 
-		if(va_phase == 1){
-			var v = 2;
-		}else{
-			var v = 1;
-		}
-
-
-		var index = concepts_index_by_id[v][parseInt(_concept_id)].index;
-		
-	}
-	
-
-	return index;
+  return index;
 }
 
 
-function get_dialects(callbackOpenModal){
+function get_dialects(callbackOpenModal) {
 
-	jQuery.ajax({
-	                    url: ajax_object.ajax_url,
-	                    type: 'POST',
-	                    data: {
-	                      action : 'get_dialects'
-	                    },
-	                    success : function( response ) {
-	                    
-	                    	
-	                    	dialect_array = JSON.parse(response);
-	                    	dialect_data =  getTableData(dialect_array,"dialect");
+  jQuery.ajax({
+    url: ajax_object.ajax_url,
+    type: 'POST',
+    data: {
+      action: 'get_dialects'
+    },
+    success: function(response) {
 
-						      if(!dialect_modal_initialized){
-						       datatable_dialects = create_dialect_list_modal(jQuery("#dialect_modal"),dialect_data);
-						      }
 
-						if(!jQuery("#welcome_modal").hasClass("in")){
-							showCustomModalBackdrop();
-							if(callbackOpenModal){
-								callbackOpenModal();
-							}
-						}
-	                    }
+      dialect_array = JSON.parse(response);
+      dialect_data = getTableData(dialect_array, "dialect");
 
-	                });
+      if (!dialect_modal_initialized) {
+        datatable_dialects = create_dialect_list_modal(jQuery("#dialect_modal"), dialect_data);
+      }
+
+      if (!jQuery("#welcome_modal").hasClass("in")) {
+        showCustomModalBackdrop();
+        if (callbackOpenModal) {
+          callbackOpenModal();
+        }
+      }
+    }
+
+  });
 
 
 }

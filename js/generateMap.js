@@ -172,12 +172,14 @@ function addGeometryAlps(geoData,center){
 if(poly){
   
 
-  if(isMobile()){
-    map.setZoom(7);
-  }else{
-    map.setZoom(7);
-  }
-
+  // if(isMobile()){
+  //   map.setZoom(7);
+  // }else{
+  //   map.setZoom(7);
+  // }
+  var bounds=new google.maps.LatLngBounds();
+  feature.getGeometry().forEachLatLng(function(path) { bounds.extend(path); } )
+  map.fitBounds(bounds);
 
 
 
