@@ -33,6 +33,7 @@ function saveWord(){
 	global $wpdb;
 
 	$konzept_id  = $_REQUEST['konzept_Id'];
+	$konzept  = $_REQUEST['konzept'];
 	$bezeichnung = stripslashes($_REQUEST['bezeichnung']);
 	$gemeinde = $_REQUEST['gemeinde'];
 	$gemeinde_id = $_REQUEST['gemeinde_id'];
@@ -71,10 +72,6 @@ function saveWord(){
 		$choosenLanguage = 'deu';
 		$lang = $choosenLanguage;
 	}
-	//$crowder_id = $current_user;
-	//setcookie("crowder_id", $current_user);
-
-
 
 	if(is_user_logged_in()){
 		$user = wp_get_current_user();
@@ -91,7 +88,6 @@ function saveWord(){
 				$va_xxx->prepare("SELECT * FROM aeusserungen WHERE Aeusserung = %s AND Id_Informant =  %d ",$bezeichnung, $informant_check_for_aeusserung[0]->Id_Informant)
 				);
 
-
 		if($aeusserungCheck != null){
 
 			$verbindung_check = $va_xxx->get_results(
@@ -107,11 +103,10 @@ function saveWord(){
 
 	}
 
-
-
-
-
-
+	/**
+	 * Geodata of the Informant, Center of Location.
+	 *
+	 */
 	$geoData = $va_xxx->get_results(
 			$va_xxx->prepare("SELECT Centroid(Geodaten), Alpenkonvention FROM Orte WHERE Id_Ort = %d",  intval($gemeinde_id))
 			);
@@ -119,96 +114,138 @@ function saveWord(){
 	$arrayG = get_object_vars($geoData[0]);
 
 	if(is_user_logged_in()){
-		//logged in users
+		/**
+		 * Case when user is logged in.
+		 * Still need to check for the id_informant of the user in the current location.
+		 */
+
 		$currentUser = wp_get_current_user();
 		$id_informant = null;
 
 
-	 $informantCheck = $va_xxx->get_results(
-	 		$va_xxx->prepare("SELECT * FROM informanten WHERE Nummer = %s AND Id_Gemeinde = %d LIMIT 1", $currentUser->display_name , intval($gemeinde_id))
-	 		);
+		$informantCheck = $va_xxx->get_results(
+				$va_xxx->prepare("SELECT * FROM informanten WHERE Nummer = %s AND Id_Gemeinde = %d LIMIT 1", $currentUser->display_name , intval($gemeinde_id))
+				);
 
-	 if($informantCheck == null){
-	 	$arrayInformant = array(
-	 			'Erhebung' => 'Crowd',
-	 			'Nummer' => $currentUser->display_name, // Name der Informant
-	 			'Ortsname' => $gemeinde,
-	 			'Id_Gemeinde' => intval($gemeinde_id),
-	 			'Georeferenz' =>$arrayG["Centroid(Geodaten)"],
-	 			'Alpenkonvention' => $arrayG["Alpenkonvention"],
-	 			'Alter_Informant' => $current_user_age
-	 	);
-	 	$va_xxx->insert(
-	 			'informanten',
-	 			$arrayInformant
-	 			);
+		if($informantCheck == null){
 
-	 	$id_informant = $va_xxx->insert_id;
+			/**
+			 * create new informant for the current location, when no information about informant is found
+			 * 
+			 */
+			
+			$arrayInformant = array(
+					'Erhebung' => 'Crowd',
+					'Nummer' => $currentUser->display_name, // Name der Informant
+					'Ortsname' => $gemeinde,
+					'Id_Gemeinde' => intval($gemeinde_id),
+					'Georeferenz' =>$arrayG["Centroid(Geodaten)"],
+					'Alpenkonvention' => $arrayG["Alpenkonvention"],
+					'Alter_Informant' => $current_user_age
+			);
+			$va_xxx->insert(
+					'informanten',
+					$arrayInformant
+					);
 
-	 	/*}elseif (strcmp($gemeinde, array_values($informantCheck)[0]->Ortsname) !== 0) {*/
-	 }elseif (intval($gemeinde_id) != intval(array_values($informantCheck)[0]->Id_Gemeinde)) {   /*----> mit gemeinde ID*/
+			$id_informant = $va_xxx->insert_id;
 
+		}elseif (intval($gemeinde_id) != intval(array_values($informantCheck)[0]->Id_Gemeinde)) {
 
-	 	$arrayInformant = array(
-	 			'Erhebung' => 'Crowd',
-	 			'Nummer' => $currentUser->display_name, // Name der Informant
-	 			'Ortsname' => $gemeinde,
-	 			'Id_Gemeinde' => intval($gemeinde_id),
-	 			'Georeferenz' =>$arrayG["Centroid(Geodaten)"],
-	 			'Alpenkonvention' => $arrayG["Alpenkonvention"],
-	 			'Alter_Informant' => $current_user_age
-	 	);
+			/**
+			 * Creates new informant for the new location, when user exists as informant but for a different location.
+			 * 
+			 */
+			
+			$arrayInformant = array(
+					'Erhebung' => 'Crowd',
+					'Nummer' => $currentUser->display_name, // Name der Informant
+					'Ortsname' => $gemeinde,
+					'Id_Gemeinde' => intval($gemeinde_id),
+					'Georeferenz' =>$arrayG["Centroid(Geodaten)"],
+					'Alpenkonvention' => $arrayG["Alpenkonvention"],
+					'Alter_Informant' => $current_user_age
+			);
 
-	 	$va_xxx->insert(
-	 			'informanten',
-	 			$arrayInformant
-	 			);
+			$va_xxx->insert(
+					'informanten',
+					$arrayInformant
+					);
 
-	 	$id_informant = $va_xxx->insert_id;
+			$id_informant = $va_xxx->insert_id;
 
-	 }else{
-	 	$id_informant = array_values($informantCheck)[0]->Id_Informant;
-	 }
+		}else{
+			/**
+			 * Gets id when informant exists for the current location.
+			 * 
+			 */
+			
+			$id_informant = array_values($informantCheck)[0]->Id_Informant;
+		}
 
-	 //Tabelle aeusserungen
-	 $arrayAeusserung = array(
-	 		'Id_Stimulus' => 90322,
-	 		'Id_Informant' => $id_informant,
-	 		'Aeusserung' => $bezeichnung,
-	 		'Bemerkung' => '',
-	 		'Erfasst_Von' => $currentUser->display_name,
-	 		'Portalsprache' => $lang,
-	 		'Id_dialekt' => $dialect_id
-	 );
+		/**
+		 * Checks if stimulus {konzept_lang} and Stimulus Term match and returns ID_Stimulus.
+		 * If stimulus is not found a new one is created and its id is returned.
+		 * @var string
+		 */
+		$current_stimulus_id = check_stimuli($konzept_id,$choosenLanguage,$konzept)['current_stimulus_id'];
 
-	 $va_xxx->insert(
-				'aeusserungen',
-				$arrayAeusserung
-	 		);
-	 //END Tabelle aeusserungen
-
-	 $id_auesserung = $va_xxx->insert_id;
-
-	 //Tabelle  vtbl_aeusserung_konzept
-	 $arrayVerknuepfung = array(
-	 		'Id_Aeusserung' => $va_xxx->insert_id,
-	 		'Id_Konzept' => intval($konzept_id)
+		//Tabelle aeusserungen
+		$arrayAeusserung = array(
+				'Id_Stimulus' => $current_stimulus_id,
+				'Id_Informant' => $id_informant,
+				'Aeusserung' => $bezeichnung,
+				'Bemerkung' => '',
+				'Erfasst_Von' => $currentUser->display_name,
+				'Portalsprache' => $lang,
+				'Id_dialekt' => $dialect_id
 		);
 
-	 $va_xxx->insert(
-				'vtbl_aeusserung_konzept',
-				$arrayVerknuepfung
-	 		);
-	}else{
-		//not logged in users
-		$anonymousCrowder_name =  $current_user; // $crowder_id;
+		$va_xxx->insert(
+					'aeusserungen',
+					$arrayAeusserung
+				);
+		//END Tabelle aeusserungen
 
-	 $informantCheck = $va_xxx->get_results(
+		$id_auesserung = $va_xxx->insert_id;
+
+		//Tabelle  vtbl_aeusserung_konzept
+		$arrayVerknuepfung = array(
+				'Id_Aeusserung' => $va_xxx->insert_id,
+				'Id_Konzept' => intval($konzept_id)
+			);
+
+		$va_xxx->insert(
+					'vtbl_aeusserung_konzept',
+					$arrayVerknuepfung
+				);
+	}else{
+		/**
+		 * Case when user is not logged in.
+		 * Still need to check for the id_informant of the not logged in, anonimous, user in the current location.
+		 */
+		
+		$anonymousCrowder_name =  $current_user;
+
+		/**
+	 	* Checks if stimulus {konzept_lang} and Stimulus Term match and returns ID_Stimulus.
+	 	* If stimulus is not found a new one is created and its id is returned.
+	 	* @var string
+	 	*/
+		$current_stimulus_id = check_stimuli($konzept_id,$choosenLanguage,$konzept)['current_stimulus_id'];
+
+
+		$informantCheck = $va_xxx->get_results(
 	 		$va_xxx->prepare("SELECT * FROM informanten WHERE Nummer = %s AND  Id_Gemeinde = %d LIMIT 1", $anonymousCrowder_name , intval($gemeinde_id) )
 	 		);
 
-	 if($informantCheck == null){
-	 	//Informant - Anonymous
+		if($informantCheck == null){
+		 	
+		 	/**
+		 	 * Case Anonymous user is not an informant.
+		 	 * Need to create new Informant.
+		 	 */
+		 	
 			$arrayInformant = array(
 					'Erhebung' => 'Crowd',
 					'Nummer' => $current_user, // Name der Informant 'anonymousCrowder' . '_' .
@@ -222,21 +259,23 @@ function saveWord(){
 					'informanten',
 					$arrayInformant
 					);
+
 			//Aeusserung
 			$arrayAeusserung = array(
-					'Id_Stimulus' => 90322,
+					'Id_Stimulus' => $current_stimulus_id,
 					'Id_Informant' => $va_xxx->insert_id,
 					'Aeusserung' => $bezeichnung,
 					'Bemerkung' => '',
 					'Erfasst_Von' => $current_user,
 					'Portalsprache' => $lang,
-	 				'Id_dialekt' => $dialect_id
+		 			'Id_dialekt' => $dialect_id
 			);
 
 			$va_xxx->insert(
 					'aeusserungen',
 					$arrayAeusserung
 					);
+
 			//Verknuepfung
 			$id_auesserung = $va_xxx->insert_id;
 			$arrayVerknuepfung = array(
@@ -248,44 +287,115 @@ function saveWord(){
 					'vtbl_aeusserung_konzept',
 					$arrayVerknuepfung
 					);
+		 }else{
 
-	 }else{
-	 	/*anonymous crowder is a informant -> use existing id of the anonymous crowder*/
-	 	$id_informant = array_values($informantCheck)[0]->Id_Informant;
-	 	//Aeusserung
-	 	$arrayAeusserung = array(
-	 			'Id_Stimulus' => 90322,
-	 			'Id_Informant' => $id_informant,
-	 			'Aeusserung' => $bezeichnung,
-	 			'Bemerkung' => '',
-	 			'Erfasst_Von' => $anonymousCrowder_name, // 'anonymousCrowder' . '_' . $crowder_id
-	 			'Portalsprache' => $lang,
-	 			'Id_dialekt' => $dialect_id
-			);
+		 	/**
+		 	 * Anonymous crowder is a informant -> use existing id of the anonymous crowder.
+		 	 * Informant Exists, using his existing Id_Informant.
+		 	 */
+		 	
+		 	$id_informant = array_values($informantCheck)[0]->Id_Informant;
 
-	 	$va_xxx->insert(
-	 			'aeusserungen',
-	 			$arrayAeusserung
-	 			);
-	 	//Verknuepfung
-	 	$id_auesserung = $va_xxx->insert_id;
-	 	$arrayVerknuepfung = array(
-	 			'Id_Aeusserung' => $va_xxx->insert_id,
-	 			'Id_Konzept' => intval($konzept_id)
-	 	);
+		 	//Aeusserung
+		 	$arrayAeusserung = array(
+		 			'Id_Stimulus' => $current_stimulus_id,
+		 			'Id_Informant' => $id_informant,
+		 			'Aeusserung' => $bezeichnung,
+		 			'Bemerkung' => '',
+		 			'Erfasst_Von' => $anonymousCrowder_name,
+		 			'Portalsprache' => $lang,
+		 			'Id_dialekt' => $dialect_id
+				);
 
-	 	$va_xxx->insert(
-	 			'vtbl_aeusserung_konzept',
-	 			$arrayVerknuepfung
-	 			);
+		 	$va_xxx->insert(
+		 			'aeusserungen',
+		 			$arrayAeusserung
+		 			);
 
-	 }
+		 	//Verknuepfung
+		 	$id_auesserung = $va_xxx->insert_id;
+		 	$arrayVerknuepfung = array(
+		 			'Id_Aeusserung' => $va_xxx->insert_id,
+		 			'Id_Konzept' => intval($konzept_id)
+		 	);
+
+		 	$va_xxx->insert(
+		 			'vtbl_aeusserung_konzept',
+		 			$arrayVerknuepfung
+		 			);
+
+		 }
 	}
 
 
 	echo json_encode($id_auesserung);
 
 	wp_die();
+}
+
+function check_stimuli($concept_id, $lang, $cur_concept_name){
+	global $va_xxx;
+
+	$karte = $concept_id . "_" . $lang;
+
+	$cur_stimuli_check = $va_xxx->get_results(
+	 		$va_xxx->prepare("SELECT * FROM `stimuli` WHERE Erhebung = 'CROWD' AND Karte = %s AND Stimulus = %s", $karte, $cur_concept_name )
+	 		);
+
+	if(count($cur_stimuli_check) > 0){
+		$cur_stimulus = get_object_vars($cur_stimuli_check[0]);	
+	}else{
+		$cur_stimulus = null;
+	}
+	
+
+	// check if stimulis with same concept, language and concept_title exists
+	if($cur_stimulus != null){
+		$stimulus_exists = true;
+		$current_stimulus_id = $cur_stimulus['ID_Stimulus'];
+	}else{
+		// if no stimulus exists check for existing stimuli with concept_lang
+		$stimulus_exists = false;
+		
+		$stimuli_check = $va_xxx->get_results(
+	 		$va_xxx->prepare("SELECT * FROM `stimuli` WHERE Erhebung = 'CROWD' AND Karte = %s", $karte )
+	 		);
+
+		$current_number = 0;
+		$stimuli = [];
+		$create_new_stimuli = false;
+	
+		foreach ($stimuli_check as $stimulus) {
+			if($current_number < $stimulus->Nummer){
+				$current_number = $stimulus->Nummer;
+			}
+		}
+		
+		
+		$array_inseting_stimulus = array(
+	 			'Erhebung' => 'CROWD',
+	 			'Nummer' => $current_number + 1,
+	 			'Karte' => $karte,
+	 			'Stimulus' => $cur_concept_name
+	 	);
+
+	 	$va_xxx->insert(
+	 			'stimuli',
+	 			$array_inseting_stimulus
+	 			);
+
+	 	$current_stimulus_id = $va_xxx->insert_id;
+	
+		
+	}
+
+	$stimuli_data = array(
+							"stimulus_exists" => $stimulus_exists,
+							"current_stimulus_id" => $current_stimulus_id
+								);
+
+
+	return $stimuli_data;
 }
 
 
@@ -679,15 +789,29 @@ function returnOrte(){
 			");*/
 	if (isset($arr['poly'])) {
 		$orte = $va_xxx->get_results($va_xxx->prepare("
-
-			SELECT z.Id_Ort, IFNULL(ub.Name, z.Name) AS Name , ub.Sprache FROM Orte z JOIN A_Orte_Hierarchien_Erweitert USING (Id_Ort) left join orte_uebersetzungen ub ON ub.Id_Ort = z.Id_Ort AND ub.Sprache = %s WHERE z.Id_Kategorie = 62 AND id_ueberort = %d AND z.Beschreibung != 'Water Body' AND z.Name !='' ORDER BY Name ASC
+			SELECT z.Id_Ort, IFNULL(ub.Name, z.Name) AS Name , ub.Sprache FROM Orte z 
+			JOIN A_Orte_Hierarchien_Erweitert USING (Id_Ort) 
+			left join orte_uebersetzungen ub ON ub.Id_Ort = z.Id_Ort AND ub.Sprache = %s 
+			WHERE z.Id_Kategorie = 62 
+			AND id_ueberort = %d 
+			AND z.Beschreibung != 'Water Body' 
+			AND z.Name !='' 
+			ORDER BY Name ASC
 			",$lang,$arr['poly']));
 	}else{
 
 	/*Fills the array with the locations from the alpine convention AND the location outside of the alpine convention, that the users have entered answers*/
 		$orte = $va_xxx->get_results("
-
-			SELECT z.Id_Ort, IFNULL(ub.Name, z.Name) AS Name , ub.Sprache FROM Orte z left join orte_uebersetzungen ub ON ub.Id_Ort = z.Id_Ort AND ub.Sprache = 'D' WHERE z.Id_Kategorie = 62 AND z.Alpenkonvention AND z.Beschreibung != 'Water Body' AND z.Name !='' UNION SELECT Distinct z.Id_Ort, IFNULL(ub.Name, z.Name) AS Name , ub.Sprache FROM informanten i left join aeusserungen a on i.Id_Informant = a.Id_Informant left join orte z on z.Id_Ort = i.Id_Gemeinde left join orte_uebersetzungen ub ON ub.Id_Ort = z.Id_Ort AND ub.Sprache = '$lang' where Id_Stimulus = 90322 AND z.Id_Kategorie = 62 AND z.Beschreibung != 'Water Body' AND z.Name !='' ORDER BY Name ASC
+			SELECT z.Id_Ort, IFNULL(ub.Name, z.Name) AS Name , ub.Sprache FROM Orte z 
+			left join orte_uebersetzungen ub ON ub.Id_Ort = z.Id_Ort AND ub.Sprache = 'D' 
+			WHERE z.Id_Kategorie = 62 AND z.Alpenkonvention AND z.Beschreibung != 'Water Body' AND z.Name !='' 
+			
+			UNION SELECT Distinct z.Id_Ort, IFNULL(ub.Name, z.Name) AS Name , ub.Sprache FROM informanten i 
+			left join aeusserungen a on i.Id_Informant = a.Id_Informant 
+			left join orte z on z.Id_Ort = i.Id_Gemeinde 
+			left join orte_uebersetzungen ub ON ub.Id_Ort = z.Id_Ort AND ub.Sprache = '$lang'
+			left join stimuli s on a.Id_Stimulus = s.ID_Stimulus WHERE s.Erhebung = 'CROWD'
+			AND z.Id_Kategorie = 62 AND z.Beschreibung != 'Water Body' AND z.Name !='' ORDER BY Name ASC
 			");
 	}
 
@@ -754,19 +878,22 @@ function returnHighScores(){
 
 	if(isset($arr['poly'])){
 	$top_users = $va_xxx->get_results($va_xxx->prepare(
-			"SELECT Nummer, count(*)
-			FROM Informanten  Join a_orte_hierarchien_erweitert erw on informanten.Id_Gemeinde = erw.id_ort JOIN Aeusserungen USING (Id_Informant)
-			WHERE Id_Stimulus = 90322 AND Nummer NOT LIKE 'anonymousCrowder%' AND erw.id_ueberort = %d
-			GROUP BY Nummer
+			"SELECT Informanten.Nummer as Nummer, count(*)
+			FROM Informanten  Join a_orte_hierarchien_erweitert erw on informanten.Id_Gemeinde = erw.id_ort 
+			JOIN Aeusserungen USING (Id_Informant)
+			left join stimuli s on Aeusserungen.Id_Stimulus = s.ID_Stimulus 
+            WHERE s.Erhebung = 'CROWD' AND Informanten.Nummer NOT LIKE 'anonymousCrowder%' AND erw.id_ueberort = %d
+			GROUP BY Informanten.Nummer
 			ORDER BY count(*) DESC
 			LIMIT $num_of_items;",$arr['poly']),ARRAY_N
 			);
 	}else{
 		$top_users = $va_xxx->get_results(
-			"SELECT Nummer, count(*)
+			"SELECT Informanten.Nummer as Nummer, count(*)
 			FROM Informanten JOIN Aeusserungen USING (Id_Informant)
-			WHERE Id_Stimulus = 90322 AND Nummer NOT LIKE 'anonymousCrowder%'
-			GROUP BY Nummer
+			left join stimuli s on Aeusserungen.Id_Stimulus = s.ID_Stimulus 
+            WHERE s.Erhebung = 'CROWD' AND Informanten.Nummer NOT LIKE 'anonymousCrowder%'
+			GROUP BY Informanten.Nummer
 			ORDER BY count(*) DESC
 			LIMIT $num_of_items;",ARRAY_N
 			);
@@ -774,12 +901,13 @@ function returnHighScores(){
 
 	if(isset($arr['poly'])){
 		$top_concepts = $va_xxx->get_results($va_xxx->prepare(
-			"SELECT IF($name_konzept != '', $name_konzept, $beschreibung_konzept), count(*),Id_Stimulus, Id_Konzept
+			"SELECT IF($name_konzept != '', $name_konzept, $beschreibung_konzept), count(*),Aeusserungen.Id_Stimulus, Id_Konzept
 			FROM Konzepte JOIN VTBL_Aeusserung_Konzept USING (Id_Konzept) JOIN
 			Aeusserungen USING (Id_Aeusserung)
 			JOIN informanten USING (Id_Informant)
             JOIN a_orte_hierarchien_erweitert erw ON informanten.Id_Gemeinde = erw.id_ort
-			WHERE Id_Stimulus = 90322 AND erw.id_ueberort = %d
+            left join stimuli s on Aeusserungen.Id_Stimulus = s.ID_Stimulus 
+            WHERE s.Erhebung = 'CROWD' AND erw.id_ueberort = %d
 			GROUP BY Id_Konzept
 			ORDER BY count(*) DESC
 			LIMIT $num_of_items;
@@ -787,10 +915,11 @@ function returnHighScores(){
 			);
 	}else{
 		$top_concepts = $va_xxx->get_results(
-			"SELECT IF($name_konzept != '', $name_konzept, $beschreibung_konzept), count(*),Id_Stimulus, Id_Konzept
+			"SELECT IF($name_konzept != '', $name_konzept, $beschreibung_konzept), count(*),Aeusserungen.Id_Stimulus, Id_Konzept
 			FROM Konzepte JOIN VTBL_Aeusserung_Konzept USING (Id_Konzept) JOIN
 			Aeusserungen USING (Id_Aeusserung)
-			WHERE Id_Stimulus = 90322
+			left join stimuli s on Aeusserungen.Id_Stimulus = s.ID_Stimulus 
+            WHERE s.Erhebung = 'CROWD'
 			GROUP BY Id_Konzept
 			ORDER BY count(*) DESC
 			LIMIT $num_of_items;
@@ -805,7 +934,8 @@ $top_locations = $va_xxx->get_results($va_xxx->prepare(
 
 			"SELECT Ortsname, count(Id_Gemeinde), Id_Gemeinde
 			FROM Informanten JOIN a_orte_hierarchien_erweitert erw ON informanten.Id_Gemeinde = erw.id_ort JOIN Aeusserungen USING (Id_Informant)
-			WHERE Id_Stimulus = 90322 AND erw.id_ueberort = %d
+			left join stimuli s on Aeusserungen.Id_Stimulus = s.ID_Stimulus 
+            WHERE s.Erhebung = 'CROWD' AND erw.id_ueberort = %d
 			GROUP BY Id_Gemeinde
 			ORDER BY count(Id_Gemeinde) DESC
 			LIMIT $num_of_items;",$arr['poly']),ARRAY_N
@@ -817,7 +947,8 @@ $top_locations = $va_xxx->get_results($va_xxx->prepare(
 
 			"SELECT Ortsname, count(Id_Gemeinde), Id_Gemeinde
 			FROM Informanten JOIN Aeusserungen USING (Id_Informant)
-			WHERE Id_Stimulus = 90322
+			left join stimuli s on Aeusserungen.Id_Stimulus = s.ID_Stimulus 
+            WHERE s.Erhebung = 'CROWD'
 			GROUP BY Id_Gemeinde
 			ORDER BY count(Id_Gemeinde) DESC
 			LIMIT $num_of_items;",ARRAY_N
@@ -1489,7 +1620,7 @@ function get_submited_answers_current_user(){
 
 
 	}else if($user_name != null && $is_admin){
-		$submited_answers_q = $va_xxx->get_results("SELECT a.Id_Aeusserung,  a.Aeusserung , IF($name_konzept = '', $beschreibung_konzept, $name_konzept) AS Konzept , k.Id_Konzept, i.Id_Gemeinde, Erfasst_Von, Ortsname, Gesperrt	 FROM `aeusserungen` a left join informanten i on i.Id_Informant = a.Id_Informant left join vtbl_aeusserung_konzept vtbl on a.Id_Aeusserung = vtbl.Id_Aeusserung left join konzepte k on vtbl.Id_Konzept = k.Id_Konzept WHERE Id_Stimulus = 90322");
+		$submited_answers_q = $va_xxx->get_results("SELECT a.Id_Aeusserung,  a.Aeusserung , IF($name_konzept = '', $beschreibung_konzept, $name_konzept) AS Konzept , k.Id_Konzept, i.Id_Gemeinde, Erfasst_Von, Ortsname, Gesperrt	 FROM `aeusserungen` a left join informanten i on i.Id_Informant = a.Id_Informant left join vtbl_aeusserung_konzept vtbl on a.Id_Aeusserung = vtbl.Id_Aeusserung left join konzepte k on vtbl.Id_Konzept = k.Id_Konzept left join stimuli s on a.Id_Stimulus = s.ID_Stimulus WHERE s.Erhebung = 'CROWD' ");
 
 	}else{
 		echo json_encode(array("submited_answers_current_user" => [], "can_edit" => false));
@@ -1862,6 +1993,384 @@ function get_dialects(){
 }
 
 
+
+//TODO IMAGE UPLOAD LOGIC
+//
+
+/**
+ * Action Hook, handle Form submission with Images for Upload
+ */
+add_action('wp_ajax_nopriv_upload_image', 'upload_image');
+add_action('wp_ajax_upload_image', 'upload_image');
+function upload_image() {
+	
+    $files = $_FILES["image_data"];
+    $selected_concept_id = $_REQUEST["selected_concept_id"];
+    
+    $array_files = reArrayFiles($files);
+
+    
+
+
+    $nonce = $_REQUEST['upload_image_wpnonce'];
+
+	if ( ! wp_verify_nonce( $nonce, 'upload_image' ) ) {
+		echo json_encode("Upload Error");
+	    die( 'Security check' ); 
+
+	} else {
+
+	    if(count($array_files) > 0){
+
+		    for($i = 0; $i < count($array_files); $i++){
+				upload_single_cs_image($array_files[$i], $selected_concept_id);
+			}
+			
+		    echo json_encode('Uploaded');
+
+	    }else{
+	    	echo json_encode("No FILES SELECTED");
+	    }
+    }
+
+	wp_die();
+}
+
+/**
+ * Uploads single Image to the media library and attaches the image to newly created Attachment
+ * Sets the Category of the Attachment to "CS Image"
+ */
+function upload_single_cs_image($file, $concept_id) {
+	require_once( ABSPATH . 'wp-admin/includes/image.php' );
+    require_once( ABSPATH . 'wp-admin/includes/file.php' );
+    require_once( ABSPATH . 'wp-admin/includes/media.php' );
+
+    // error_log(print_r($file, true));
+
+    /**
+	 * saving image to upload directory
+	 */
+	$upload_overrides = array( 'test_form' => false );
+	
+	$file["name"] = "cs" . "-" . $concept_id . "-" . $file["name"];
+
+	// check if file is an image
+	if(is_array(getimagesize($file["tmp_name"]))){
+
+		if(is_multisite()){
+
+			switch_to_blog(1);
+
+			$movefile = wp_handle_upload($file, $upload_overrides);
+
+			restore_current_blog();
+
+		}else{
+			$movefile = wp_handle_upload($file, $upload_overrides);
+		}
+
+
+		/**
+		 * Get Id of category 'CS Upload'
+		 */
+		$cat_id = category_exists('CS Image');
+		if($cat_id){
+			// error_log("EXISTS");
+			// error_log($cat_id);
+		}else{
+			$cat_id = wp_create_category( 'CS Image', 0 );
+			wp_create_category( 'CS Approved Image', 0 );
+			// error_log("CREATED");
+			// error_log($cat_id);
+		}
+
+
+		/**
+		 * Adding Image in Media Library, attaching it to a post
+		 */
+		if( isset( $movefile["file"] )) {
+			$file_name_and_location = $movefile["file"];
+			$file_title_for_media_library = $file["name"];
+			
+			//"cs" . "-" .  $concept_id . "-" .
+			$attachment = array(
+				"post_mime_type" => $file["type"],
+				"post_title" =>  addslashes( $file_title_for_media_library ),
+				"post_content" => "",
+				"post_status" => "inherit",
+				'taxonomies'  => array('CS Image', 'category' )
+			);
+			
+			if(is_multisite()){
+
+				switch_to_blog(1);
+
+				// $cat_id = category_exists('CS Image');
+				// if($cat_id){
+				// 	error_log("EXISTS");
+				// 	error_log($cat_id);
+				// }else{
+				// 	$cat_id = wp_create_category( 'CS Image', 0 );
+				// 	wp_create_category( 'CS Approved Image', 0 );
+				// 	error_log("CREATED");
+				// 	error_log($cat_id);
+				// }
+
+
+				$id = wp_insert_attachment( $attachment, $file_name_and_location );
+	
+				// $category_test = wp_set_post_categories($id, 72, true);
+				// error_log(print_r($category_test,true));
+				
+				wp_set_object_terms($id, array(72), 'media_category', true );
+
+				require_once( ABSPATH."wp-admin/includes/image.php" );
+			
+				$attach_data = wp_generate_attachment_metadata( $id, $file_name_and_location );
+				wp_update_attachment_metadata( $id, $attach_data );
+
+				restore_current_blog();
+
+			}else{
+				$id = wp_insert_attachment( $attachment, $file_name_and_location );
+
+				wp_set_post_categories($id, $cat_id, true);
+			
+				require_once( ABSPATH."wp-admin/includes/image.php" );
+			
+				$attach_data = wp_generate_attachment_metadata( $id, $file_name_and_location );
+				wp_update_attachment_metadata( $id, $attach_data );
+			}
+
+		}
+
+	}
+}
+
+/**
+ * Hook when an attachment is being updated
+ * Check if attachment in Category 'CS Image' and if 'CS Approved Image' has be selected
+ * If 'CS Approved Image' has be selected add image to va_xxx.medien and va_xxx.vtbl_medium_konzept
+ * If 'CS Approved Image' is not selected delete data of the image if existant va_xxx.medien and va_xxx.vtbl_medium_konzept
+ */
+add_action("attachment_updated", "process_image_update_cs", 10, 3);
+function process_image_update_cs($image_id, $post, $update){
+
+	if(is_multisite()){
+
+		switch_to_blog(1);
+
+		$cs_upload_cat_id = 'CS Image';
+		$cs_approved_cat_id = 'CS Approved Image';
+
+		$categories = [];//wp_get_post_categories($image_id);
+
+
+		$media_categories = [];
+		$media_categories = get_the_terms( $image_id, 'media_category' );
+
+		foreach ($media_categories as $value) {
+			array_push($categories,get_object_vars($value)["name"]);
+		}
+
+
+		restore_current_blog();
+
+	}else{
+		$cs_upload_cat_id = category_exists('CS Image');
+		$cs_approved_cat_id = category_exists('CS Approved Image');
+
+		$categories = wp_get_post_categories($image_id);
+	}
+
+
+
+
+
+	
+
+	if(in_array($cs_upload_cat_id, $categories)){
+		if(in_array($cs_approved_cat_id, $categories)){
+			add_cs_image_to_concept($image_id);
+		}else{
+			delete_cs_image_to_concept($image_id);
+		}
+	}
+
+}
+
+function add_cs_image_to_concept($image_id){
+	global $va_xxx;
+
+	if(is_multisite()){
+
+		switch_to_blog(1);
+		
+		$title_name = get_the_title($image_id);
+		$split_title = explode( "/", $title_name);
+		$split_title = explode("-", end($split_title));
+		$concept_id = $split_title[1];
+
+		$image_name = explode(".", $split_title[2])[0];
+
+		$url = wp_get_attachment_url( $image_id );
+
+		restore_current_blog();
+
+	}else{
+		$title_name = get_the_title($image_id);
+		$split_title = explode( "/", $title_name);
+		$split_title = explode("-", end($split_title));
+		$concept_id = $split_title[1];
+
+		$image_name = explode(".", $split_title[2])[0];
+
+		$url = wp_get_attachment_url( $image_id );
+	}
+
+
+	/**
+	 * check if image already saved in va_xxx.medien
+	 */
+	$exists = $va_xxx->get_results($va_xxx->prepare("SELECT * FROM `medien` WHERE Dateiname = %s" ,$url ));
+
+	if(empty($exists)){
+
+		/**
+		 * Insert Image Attachment to va_xxx.medien
+		 * 
+		 */
+		$image_data = array(
+		 			'Dateiname' => $url,
+		 			'Ursprung' => "CS Tool",
+		 			'Lizenz' => "CC BY-SA 4.0"
+		 			);
+
+		$va_xxx->insert(
+		 			'medien',
+		 			$image_data
+		 			);
+
+		$inserted_media = $va_xxx->insert_id;
+
+
+		/**
+		 * Connect Inserted Media to concept in vtbl_medium_konzept
+		 */
+		
+		$medium_concept = array(
+		 			'Id_Medium' => $inserted_media,
+		 			'Id_Konzept' => $concept_id
+		 			);
+
+		$va_xxx->insert(
+		 			'vtbl_medium_konzept',
+		 			$medium_concept
+		 			);
+
+		if($va_xxx->last_error !== '') :
+		    $va_xxx->print_error();
+		endif;
+
+
+	}else{
+		$media_id = get_object_vars($exists[0])["ID_Medium"];
+
+		$exists_connection = $va_xxx->get_results($va_xxx->prepare("SELECT * FROM `vtbl_medium_konzept` WHERE Id_Medium = %s AND Id_Konzept = %s" ,$media_id, $concept_id));
+
+		$va_xxx->update('medien', array('Lizenz' => "CC BY-SA 4.0", 'Ursprung' => "CS Tool" ), array('ID_Medium' => $media_id ) );
+
+		if(empty($exists_connection)){
+
+			$medium_concept = array(
+		 			'Id_Medium' => $media_id,
+		 			'Id_Konzept' => $concept_id
+		 			);
+
+			$va_xxx->insert(
+			 			'vtbl_medium_konzept',
+			 			$medium_concept
+			 			);
+
+			if($va_xxx->last_error !== '') :
+			    $va_xxx->print_error();
+			endif;
+
+		}
+	}
+
+}
+
+function delete_cs_image_to_concept($image_id){
+	global $va_xxx;
+
+
+
+	if(is_multisite()){
+
+		switch_to_blog(1);
+		$title_name = get_the_title($image_id);
+		$split_title = explode( "/", $title_name);
+		$split_title = explode("-", end($split_title));
+		$concept_id = $split_title[1];
+
+		$image_name = explode(".", $split_title[2])[0];
+
+		$url = wp_get_attachment_url( $image_id );
+
+
+		restore_current_blog();
+
+	}else{
+		$title_name = get_the_title($image_id);
+		$split_title = explode( "/", $title_name);
+		$split_title = explode("-", end($split_title));
+		$concept_id = $split_title[1];
+
+		$image_name = explode(".", $split_title[2])[0];
+
+		$url = wp_get_attachment_url( $image_id );
+	}
+
+
+	/**
+	 * check if image has a medien and a vtbl_medium entry
+	 * If entry exists, delete them
+	 */
+	$exists_media = $va_xxx->get_results($va_xxx->prepare("SELECT * FROM `medien` WHERE Dateiname = %s" ,$url ));
+
+	if(!empty($exists_media)){
+		$id_media = get_object_vars($exists_media[0])["ID_Medium"];
+		
+		$va_xxx->delete('vtbl_medium_konzept',array('Id_Medium' => $id_media ));
+
+		if($va_xxx->last_error !== '') :
+		    $va_xxx->print_error();
+		endif;
+		
+	}
+
+}
+
+
+
+function reArrayFiles(&$file_post) {
+    $file_ary = array();
+    $file_count = count($file_post['name']);
+    $file_keys = array_keys($file_post);
+
+    for ($i=0; $i<$file_count; $i++) {
+        foreach ($file_keys as $key) {
+            $file_ary[$i][$key] = $file_post[$key][$i];
+        }
+    }
+
+    return $file_ary;
+}
+
+
+//END IMAGE UPLOAD 
+
 add_action('wp_ajax_nopriv_save_audio', 'save_audio');
 add_action('wp_ajax_save_audio', 'save_audio');
 function save_audio(){
@@ -1930,17 +2439,102 @@ function suggest_dialect(){
 	global $va_xxx;
 
 	$dialect_name  = $_REQUEST['dialect'];
+	$cluster  = $_REQUEST['dialect_cluster'];
 
-	$dialect_to_save = array(
-	 			'Name' => $dialect_name
-	 			);
+	$exists_dialect = $va_xxx->get_results($va_xxx->prepare("SELECT * FROM `dialects` WHERE Name LIKE %s" ,$dialect_name ));
 
-	$va_xxx->insert(
-	 			'dialects',
-	 			$dialect_to_save
-	 			);
+	if(empty($exists_dialect)){
 
-	echo json_encode(array('dialect' => $dialect_name , 'id' => $va_xxx->insert_id));
+		if (!$cluster){
+			$cluster = "ak";
+		}
+
+		$dialect_to_save = array(
+		 			'Name' => $dialect_name,
+		 			);
+
+		$va_xxx->insert(
+		 			'dialects',
+		 			$dialect_to_save
+		 			);
+
+
+		$inserted_id = $va_xxx->insert_id;
+
+		$dialect_cluster_to_save = array(
+			'Id_dialect' => $inserted_id,
+			'Cluster' => $cluster
+		);
+
+		$va_xxx->insert(
+		 			'dialect_clusters',
+		 			$dialect_cluster_to_save
+		 			);
+
+		echo json_encode(array('dialect' => $dialect_name , 'id' => $inserted_id, 'new_dialect' => true));
+	}else{
+		$dialect_name = get_object_vars($exists_dialect[0])["Name"];
+		$dialect_id = get_object_vars($exists_dialect[0])["Id_dialect"];
+		echo json_encode(array('dialect' => $dialect_name , 'id' => $dialect_id,  'new_dialect' => false));
+	}
 
 	wp_die();
 }
+
+
+add_action('wp_ajax_nopriv_get_translations', 'get_translations');
+add_action('wp_ajax_get_translations', 'get_translations');
+function get_translations(){
+	global $va_xxx;
+
+	$translations = $va_xxx->get_results("SELECT * FROM `uebersetzungen` WHERE `Seite` LIKE 'CS' ORDER BY `Seite` DESC");
+
+	
+	$translations_array = array();
+
+	foreach ($translations as $translation) {
+
+		$key = $translation->Schluessel;
+		$ger = $translation->Begriff_D;
+		$fr = $translation->Begriff_F;
+		$it = $translation->Begriff_I;
+		$sl = $translation->Begriff_S;
+
+		$translations_array[$key] = [$ger, $fr, $it, $sl];
+	}
+
+	echo json_encode($translations_array);
+
+	wp_die();
+}
+
+
+// add_filter( 'wp_mail', 'my_wp_mail_filter' );
+// function my_wp_mail_filter( $args ) {
+//     // Check the message subject for a known string in the notification email.
+
+// 	error_log(print_r("EMAIL FILTER", true));
+// 	error_log(print_r($args, true));
+
+// 	// $message = $args["message"];
+// 	// $about = $args["about"];
+
+// 	// $from_user = "=?UTF-8?B?".base64_encode($sending_user)."?=";
+// 	// $subject = "=?UTF-8?B?".base64_encode($about)."?=";
+
+// 	// $headers = "From: $from_user <$sending_user_mail >\r\n".
+// 	// 		"MIME-Version: 1.0" . "\r\n" .
+// 	// 		"Content-type: text/html; charset=UTF-8" . "\r\n";
+
+
+
+//     return $args;
+// }
+
+// add_filter( 'wp_mail_from', 'testing_email' );
+// function testing_email($string){
+// 	error_log(print_r("EMAIL: ", true));
+// 	error_log(print_r($string, true));
+
+//     return $string;
+// }

@@ -129,6 +129,8 @@ function initMenu(){
               <h1 class="h1_smaller" id="modal_welcome" lang_id="0">Willkommen.</h1>
               <p id="slogan_id"  lang_id="0">Sprich die Sprache der Alpen!</p>
 
+                <div id="navigation_languages">Navigationssprache</div>
+                
                 <div class="outerselect-container">
                 <select id="language_select" class="customselect">
                   <option  class="customoption"> ...</option>
@@ -411,8 +413,8 @@ function initMenu(){
 
              <div class ="c_fake_body"></div>
                <div class="carousel-caption welcomeback_container">
-              <h1 class="h1_smaller" id="modal_welcome" lang_id="0">Willkommen <br> zurück.</h1>
-              <i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw""></i>
+              <h1 class="h1_smaller" id="modal_welcomeback" lang_id="0">Willkommen <br> zurück.</h1>
+              <i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>
             </div>
    
 
@@ -530,6 +532,58 @@ function initMenu(){
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->  
 
+<div class="modal fade" id="upload_image_modal" data-backdrop="false">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          <div class="customclose"><i class="fa fa-times" aria-hidden="true"></i></div>
+      <!--   <button type="button" class="close" data-dismiss="modal" aria-label="Close"> 
+          <span aria-hidden="true">&times;</span> -->
+        </button>
+        <div class="modal-title">Image Upload</div>
+        
+      </div>
+      <div class="modal-body" id="upload_image_body">
+
+        <div id="drop-area">
+          <div id="drop-area-overlay"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>
+        <form id="image_upload_form"> 
+          <input type="file" name="images_input[]" id="fileElem" multiple="multiple" accept="image/*" onchange="app.ui.image_uploader.handleFiles(this.files)">
+          <label class="button_select_files" for="fileElem">Click Here to Select Images, or drag and drop them in the box.</label>
+          <?php
+            wp_nonce_field( "upload_image", "upload_image_wpnonce" );
+          ?>  
+        </form>
+        
+        <div id="gallery">
+        </div>
+
+        <div>
+          <input id="accept_req_image_upload" type="checkbox" name="accept_req_image_upload" value="Check Licensing"> 
+          <label for="accept_req_image_upload" id="accept_terms_label" style="display: contents;">Der Nutzer muss vor dem Upload zustimmen, dass er die Rechte an den Bildern hat und sie unter CC BY SA 4.0 zur Verfügung stellt</label>
+        </div>
+
+      </div>
+
+      <div>
+
+
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="close_modal" class="btn btn-secondary" data-dismiss="modal">Schließen</button>
+        <button id="upload_images" type="button" class="btn btn-primary" >Bild Hochladen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- <div class="image_upload_thumbnail">
+  
+</div> -->
+
+
 
 <!-- <div class="modal fade" id="register_or_anonymous_modal">
   <div class="modal-dialog" role="document">
@@ -537,7 +591,7 @@ function initMenu(){
     <div class="cover_body"></div>
     <div class="customclose"><i class="fa fa-times" aria-hidden="true"></i></div>
      <div class="modal-body">
-      <div class = "custom_header"><img src="<?php echo plugins_url('assets/images/',__FILE__)?>favicon_bw.png"></img>Verba Alpina </div>
+      <div class = "custom_header"><img src="<?php //echo plugins_url('assets/images/',__FILE__)?>favicon_bw.png"></img>Verba Alpina </div>
 
         <div style ="position: relative;z-index: 3;">
          <div class=register_or_anonymous_headline></div>
@@ -546,7 +600,7 @@ function initMenu(){
           
           <div class="lwa-register" style="display:block;">
           <i class="fa fa-plus" aria-hidden="true" style="color: white;"></i><strong class="slides_reg"> New Account<?php //esc_html_e('Register For This Site','login-with-ajax') ?></strong> 
-          <form name="lwa-register"  action="<?php echo esc_attr(LoginWithAjax::$url_register); ?>" method="post">
+          <form name="lwa-register"  action="<?php //echo esc_attr(LoginWithAjax::$url_register); ?>" method="post">
                 <span class="lwa-status"></span>
             <table class="table-sm">
                       <tr>
@@ -557,8 +611,8 @@ function initMenu(){
                       <tr class="lwa-username">
                           <td>  
                             <div>
-                              <?php $msg = __('Username','login-with-ajax');//'Username'; ?>
-                              <input type="text" class="form-control" name="user_login" id="user_login"  value="<?php echo esc_attr($msg); ?>" onfocus="if(this.value == '<?php echo esc_attr($msg); ?>'){this.value = '';}" onblur="if(this.value == ''){this.value = '<?php echo esc_attr($msg); ?>'}" />
+                              <?php //$msg = __('Username','login-with-ajax');//'Username'; ?>
+                              <input type="text" class="form-control" name="user_login" id="user_login"  value="<?php //echo esc_attr($msg); ?>" onfocus="if(this.value == '<?php //echo esc_attr($msg); ?>'){this.value = '';}" onblur="if(this.value == ''){this.value = '<?php //echo esc_attr($msg); ?>'}" />
                               </div> 
                           </td>
 
@@ -566,8 +620,8 @@ function initMenu(){
                       <tr class="lwa-email">
                           <td>
                             <div>
-                              <?php $msg = __('E-mail','login-with-ajax') ?>
-                              <input type="text" class="form-control" name="user_email" id="user_email"  value="<?php echo esc_attr($msg); ?>" onfocus="if(this.value == '<?php echo esc_attr($msg); ?>'){this.value = '';}" onblur="if(this.value == ''){this.value = '<?php echo esc_attr($msg); ?>'}"/>
+                              <?php //$msg = __('E-mail','login-with-ajax') ?>
+                              <input type="text" class="form-control" name="user_email" id="user_email"  value="<?php //echo esc_attr($msg); ?>" onfocus="if(this.value == '<?php //echo esc_attr($msg); ?>'){this.value = '';}" onblur="if(this.value == ''){this.value = '<?php //echo esc_attr($msg); ?>'}"/>
                               </div>
                           </td>
 
@@ -575,7 +629,7 @@ function initMenu(){
                       <tr>
           
                         <td>
-                            <button class="register_btn btn" type="submit" value="<?php esc_attr_e('Register','login-with-ajax'); ?>" tabindex="100" /><i class="fa fa-check" aria-hidden="true"></i> Register</button>
+                            <button class="register_btn btn" type="submit" value="<?php //esc_attr_e('Register','login-with-ajax'); ?>" tabindex="100" /><i class="fa fa-check" aria-hidden="true"></i> Register</button>
                             <input type="hidden" name="login-with-ajax" value="register" />
 
                             <button class="send_anonymous_btn btn"  tabindex="100" /><i class="fa fa-check" aria-hidden="true"></i> Anonyme Daten schicken</button>

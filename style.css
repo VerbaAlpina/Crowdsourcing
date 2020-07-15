@@ -88,6 +88,7 @@ z-index: 5 !important;
 		left: 0;
 		position: absolute;
 		top: 0;
+		z-index: 0;
 }
 
 .modal-open .modal {
@@ -227,6 +228,16 @@ cursor: pointer;
 	bottom: 0;
 	z-index: 0;
 	display: block
+}
+
+#navigation_languages{
+	padding: 10px;
+	font-family: 'Lora', serif;
+}
+
+#navigation_languages_c{
+	padding: 10px;
+	font-family: 'Lora', serif;
 }
 
 #fake_arrow{
@@ -371,6 +382,20 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 
 }
 
+#suggest_image_upload{
+	width: 100%;
+    background-color: #3366ff;
+    color: #fff;
+    height: 30px;
+    text-align: center;
+    font-weight: 500;
+    padding-top: 2px;
+}
+
+#suggest_image_upload:hover{
+	cursor: pointer;
+	background-color: #275dff;
+}
 
 #data_remark{
     position: absolute;
@@ -387,6 +412,49 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 #data_remark:hover{
 	cursor: pointer;
 	opacity: 1.0;
+}
+
+
+#upload_image_modal .modal-content{
+    background: #313131;
+    color: white;
+}
+
+#upload_image_modal .customclose{
+      top: 0px;
+}
+
+#upload_image_modal .modal-footer{
+	border: none !important;
+}
+
+#upload_image_modal .modal-footer #close_modal{
+	background: none;
+	border: 1px solid white;
+	color: white;
+}
+
+#upload_image_modal .modal-footer #upload_images{
+    background: none;
+    border: 1px solid #009200;
+    color: #00bb00;
+}
+
+#upload_image_modal .btn:hover{
+	opacity: 0.75;
+}
+
+#upload_image_modal .btn-sm:hover{
+	opacity: 0.75;
+}
+
+
+
+#erase_upload_images{
+	background: none;
+    border: 1px solid #ac2925;
+    color: #ac2925;
+    margin-bottom: 4px;
 }
 
 .c-back-button{
@@ -423,7 +491,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 @media screen and (min-height: 430px){
 #welcome_modal .first-info{
 	bottom:0;
-	margin-bottom:180px;
+	margin-bottom:220px;
 	}
 }
 
@@ -472,11 +540,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 	 }
 
 	 body .va_phase_wrapper {
-	 	right: -25px;
-	 }
-
-	 body .list_modal_button_va_phase{
-	 	padding: 5px 24px;
+	 	right: -35px;
 	 }
 
 }
@@ -530,13 +594,9 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 		width: 90%;
 	}
 
-	body .va_phase_wrapper {
+/*	body .va_phase_wrapper {
 		right: -30px;
-	}
-
-	body .list_modal_button_va_phase{
-	 padding: 5px 24px;
-	}
+	}*/
 }
 
 @media screen and (max-width: 490px) {
@@ -559,11 +619,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 	}
 
 	body .va_phase_wrapper {
-	 	right: -25px;
-	}
-
-	body .list_modal_button_va_phase{
-	 	padding: 5px 24px;
+	 	right: -35px;
 	}
 }
 
@@ -581,7 +637,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 	 }
 
 	body .list_modal_button_va_phase{
-	 	padding: 5px 24px;
+	 	padding: 5px 10px;
 	 }
 
 }
@@ -954,6 +1010,11 @@ width: 100%;
 		cursor:pointer;
 }
 
+
+#upload_image_modal{
+	z-index: 0;
+}
+
 #image_modal{
 	 z-index: 0;
 }
@@ -963,9 +1024,7 @@ width: 100%;
 }
 
 #image_modal .custom_header{
-
-z-index: 10;
-
+	z-index: 10;
 }
 
 #image_modal .i_fake_body{
@@ -1588,7 +1647,7 @@ opacity: 0.65;
 }
 
 .answers_with_wiki{
-	margin-right: 25px;
+	margin-right: 40px;
 }
 
 /*Register Modal Elements*/
@@ -2101,17 +2160,29 @@ div .concept_data{
 	transform-origin: left top 0;*/
     display: inline-block;
     color: white;
-    padding: 10px 24px;
+    padding: 10px 10px;
     opacity: 0.9;
     width: auto;
     letter-spacing: 1px;
     text-align: center;
     font-family: "Quicksand";
     text-transform: uppercase;
+    font-size: 12px;
+    margin-left: -1px;
 }
 
 .list_modal_button_va_phase:hover{
 	cursor: pointer;
+}
+
+.list_modal_button_va_phase > .far{
+	margin-right: 5px;
+}
+
+.va_phase_hidden{
+	visibility: hidden;
+	width: 0px;
+    height: 0px;
 }
 
 
@@ -2129,10 +2200,16 @@ div .concept_data{
 	border-top-left-radius: 4px;
 }
 
-.list_modal_button_va_phase.va_phase_2{
+.list_modal_button_va_phase.va_phase_3{
 	border-top-right-radius: 4px;
 }
 
+.list_modal_button_va_phase.va_phase_1:not(.active){
+	-webkit-box-shadow: inset -26px 0px 7px -20px rgba(0,0,0,0.16);
+	-moz-box-shadow: inset -26px 0px 7px -20px rgba(0,0,0,0.16);
+	box-shadow: inset -26px 0px 7px -20px rgba(0,0,0,0.16);
+	background-color: #989da4;
+}
 
 .list_modal_button_va_phase.va_phase_2:not(.active){
 	-webkit-box-shadow: inset 5px 0px 7px 0px rgba(0,0,0,0.28);
@@ -2141,10 +2218,10 @@ div .concept_data{
 	background-color: #989da4;
 }
 
-.list_modal_button_va_phase.va_phase_1:not(.active){
-	-webkit-box-shadow: inset -26px 0px 7px -20px rgba(0,0,0,0.16);
-	-moz-box-shadow: inset -26px 0px 7px -20px rgba(0,0,0,0.16);
-	box-shadow: inset -26px 0px 7px -20px rgba(0,0,0,0.16);
+.list_modal_button_va_phase.va_phase_3:not(.active){
+	-webkit-box-shadow: inset 5px 0px 7px 0px rgba(0,0,0,0.28);
+	-moz-box-shadow: inset 5px 0px 7px 0px rgba(0,0,0,0.28);
+	box-shadow: inset 5px 0px 7px 0px rgba(0,0,0,0.28);
 	background-color: #989da4;
 }
 
@@ -2156,6 +2233,10 @@ div .concept_data{
 	background-color:#4CAF50 !important;
 }
 
+.va_phase_3.active{
+	background-color:#db4545 !important;
+}
+
 .va_phase_wrapper{
 
 	transform: rotate(90deg);
@@ -2163,32 +2244,33 @@ div .concept_data{
 	position: absolute;
 	/*top:40%;*/
 	top : 344px;
-	right: -40px;
+	right: -36px;
 	z-index: -1;
 	/*float: right;*/
+	width: max-content;
 }
 
 .german_va{
-	top: 315px !important;
+	top: 383px !important;
 }
 
 
 .french_va{
-	top: 390px !important;
+	top: 414px !important;
 }
 
 
 .italian_va{
-	top: 300px !important;
+   top: 351px !important;
 }
 
 
 .slovenian_va{
-	top: 305px !important;
+    top: 396px !important;
 }
 
 #concepts_modal > .modal-dialog > .modal-content > .modal-body{
-	min-height: 400px;
+	min-height: 520px;
 }
 
 .wiki_info{
@@ -2205,11 +2287,25 @@ div .concept_data{
 .wikidata_icon{
 	/* float: right; */
   padding-right: 18px;
-	padding-top: 4px;
+	/*padding-top: 4px;*/
   margin-left: auto;
 	height: 100%;
 	cursor: pointer;
 }
+
+.wikidata_image{
+	width: auto;
+	max-height: 22px;
+}
+
+@media screen and (max-width: 575px){
+	.wikidata_image {
+		width: auto;
+		max-height: 26px;
+	}
+}
+
+
 
 .few_elements:hover{
 	cursor: pointer;
@@ -2247,3 +2343,113 @@ div .concept_data{
 /*#waveform > wave{
 	display: inline;
 }*/
+/*#dropzone_container{
+	min-height: 300px;
+	background-color: #0000000d;
+}*/
+
+#image_upload_form{
+	/*min-height: 200px;*/
+}
+
+#drop-area-overlay{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0px;
+    background: #0000009e;
+    justify-content: center;
+    align-items: center;
+    display: none;
+ }
+
+ #drop-area-overlay i{
+ 	font-size: 32px;
+ }   
+
+#drop-area {
+  border: 2px;
+  background-color: #3434340f;
+  border-radius: 5px;
+  padding: 10px;
+  position: relative;
+  border: 2px dashed white !important;
+}
+
+#drop-area.highlight {
+	border-color: #000000a1;
+    /*border: 5px;*/
+    background-color: #34343429;
+    border-radius: 5px;
+    /*padding: 10;*/
+    border: dashed 2px #333;
+}
+
+p {
+  margin-top: 0;
+}
+.my-form {
+  margin-bottom: 10px;
+}
+#gallery {
+  margin-top: 10px;
+}
+#gallery img {
+  width: 150px;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  vertical-align: middle;
+  border: solid 1px;
+  max-height: 150px;
+}
+.button_select_files {
+  /*display: inline-block;
+  padding: 10px;
+  background: #ccc;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 1px solid #ccc;*/
+  width: 100%;
+  height: 100%;
+  max-height: 200px;
+  min-height: 145px;
+  text-align: center;
+}
+
+.button_select_files:hover {
+	cursor: pointer;
+	background-color: #34343436;
+	border-radius: 2px;
+}
+
+
+#fileElem {
+  display: none;
+}
+
+
+#loading_images{
+	display: none;
+}
+
+.button_select_files{
+	display: block;
+	margin-bottom: 0px;
+}
+
+.successful_upload{
+	text-align: center;
+	font-weight: bold;
+	font-size: 18px;
+}
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Opera and Firefox */
+}
