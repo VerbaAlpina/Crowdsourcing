@@ -39,10 +39,12 @@ class DataLoader {
 				app.manager.addData("dialect_array", JSON.parse(response));
 
 				var dialect_array = app.manager.getData("dialect_array").data_value
-				var dialect_data = app.manager.getTableData(dialect_array, "dialect");
+
+				var dialect_data = app.manager.getTableData(dialect_array.all_dialects, "dialect");
+				var dialect_data_alp = app.manager.getTableData(dialect_array.alp_dialects, "dialect");
 
 				if (!app.manager.dialect_modal_initialized) {
-					let datatable_dialects = app.manager.create_dialect_list_modal(jQuery("#dialect_modal"), dialect_data);
+					let datatable_dialects = app.manager.create_dialect_list_modal(jQuery("#dialect_modal"), dialect_data_alp, dialect_data);
 					app.manager.addData("datatable_dialects", datatable_dialects)
 					app.manager.dialect_modal_initialized = true;
 				}
@@ -181,7 +183,6 @@ class DataLoader {
 			jQuery('#custom_backdrop').remove();
 			jQuery("#welcomeback_modal").hide()
 			callback();
-
 		}, 300);
 	}
 
@@ -414,7 +415,7 @@ class DataLoader {
 										}, 300);
 
 										//prompt user to register/send data anonimously
-										if (Object.keys(app.manager.submitedAnswers_indexed).length == 1) {
+										if (Object.keys(app.manager.submitedAnswers_indexed).length == 5) {
 											setTimeout(function() {
 												app.ui.openRegisterOrAnonymousModal();
 											}, 1000);
@@ -771,7 +772,36 @@ class DataLoader {
 
 	}
 
+
+
+		/**
+	 * [sendFeedbackEmail description]
+	 * @param  {String}   entry    [description]
+	 * @param  {Function} callback [description]
+	 * @return {void}            [description]
+	 */
+	sendFeedbackEmail(entry, callback) {
+
+		jQuery.ajax({
+			url: ajax_object.ajax_url,
+			type: 'POST',
+			data: {
+				action: 'sendFeedbackEmail',
+				entry: entry,
+				user: app.manager.user_data.current_user,
+				email: app.manager.user_data.user_email,
+			},
+			success: function(response) {
+				callback();
+			}
+
+		});
+
+	}
+
 }
+
+
 
 
 /**

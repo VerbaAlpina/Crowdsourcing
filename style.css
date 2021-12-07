@@ -552,6 +552,8 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 	}
 
 
+
+
 	.location_list_controls{
 		margin-top: 3px !important;
 		height: 28px  !important;
@@ -592,6 +594,22 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 
 	#location_list_modal > .modal-dialog{
 		width: 90%;
+	}
+
+	#feedbackbutton{
+		font-size: 12px;
+	}
+
+	#help_modal .modal_subhead{
+		font-size: 23px;
+	}
+
+	#help_modal #help_titel_modal{
+		font-size: 28px;
+	}
+
+	#help_modal .helpanswer{
+		font-size: 11px;
 	}
 
 /*	body .va_phase_wrapper {
@@ -717,39 +735,6 @@ background-color:rgb(60, 60, 60);
 
 }
 
-// @media screen and (min-height: 900px){
-// 	.dataTables_scrollBody{
-// 	max-height:85vh !important;
-// }
-// }
-
-
-
-@media screen and (max-height: 600px){
-	.dataTables_scrollBody{
-	max-height:65vh !important;
-}
-}
-
-@media screen and (max-height: 500px){
-	.dataTables_scrollBody{
-	max-height:55vh !important;
-}
-}
-
-
-@media screen and (max-height: 350px){
-	.dataTables_scrollBody{
-	max-height:45vh !important;
-}
-}
-
-
-@media screen and (max-height: 300px){
-	.dataTables_scrollBody{
-	max-height:30vh !important;
-}
-}
 
 
 @media screen and (max-width:350px) and (max-height:450px){
@@ -1220,6 +1205,16 @@ border-radius: 4px;
 		border: 1px solid white;
 		cursor: pointer;
 		color:white;
+}
+
+.help_cover{
+    position: absolute;
+    opacity: 0.5;
+    background: black;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    display: none;
 }
 
 
@@ -1765,7 +1760,7 @@ opacity: 0.65;
 	display: none;
 }*/
 
-.register_btn, .send_anonymous_btn {
+.register_btn, .send_anonymous_btn, .dont_send_btn {
 
     border: 1px solid white !important;
     background: transparent !important;
@@ -1773,7 +1768,11 @@ opacity: 0.65;
     color: white;
 }
 
-.register_btn:hover , .send_anonymous_btn:hover {
+.dont_send_btn{
+	margin-top: 5px;
+}
+
+.register_btn:hover , .send_anonymous_btn:hover , .dont_send_btn:hover {
 	opacity: 0.85;
 	color: white;
 }
@@ -1796,6 +1795,33 @@ opacity: 0.65;
 .ui-tooltip{
 z-index:30000 !important;
 }
+
+.help_modal_show_intro{
+    color: white;
+    border: 1px solid white;
+    top: 12px;
+    font-size: 16px;
+    position: absolute;
+    right: 0px;
+    padding: 5px;
+    padding-right: 8px;
+    padding-left: 10px;
+    border-radius: 5px;
+    font-family: 'Lora';
+    margin-right: 10px;
+    font-style: italic;
+    cursor: pointer;
+}
+
+.help_modal_show_intro:hover{
+	opacity: 0.95;
+}
+
+.help_modal_show_intro span{
+	margin-left: 5px;
+	
+}
+
 
 .list_modal_button_in_search{
 
@@ -1881,20 +1907,71 @@ user-select: none;
     margin-top: 50px;
 }
 
+#helpicon{
+    margin-top: 101px;
+}
+
 .highscoreicon:hover{
 	opacity: 0.85;
 	cursor: pointer;
 }
 
-#share_link{
+.addModalTextarea{
 	width: 100%;
 	resize:none;
 	border-radius: 10px;
+}
+
+
+.helpanswer{
+	padding: 10px;
+	margin: 10px;
+	color: white;
+	background: #000000a1;
+	border-radius: 8px;
+	margin-bottom: 0px;
+	font-size: 13px;
+
+}
+
+.helpanswer li {
+  list-style-type: circle;
+  margin-left: 15px;
+  cursor: pointer;
+  margin-bottom: 5px;
+  opacity: 0.8;
+}
+
+.helpanswer li:hover{
+	opacity: 1;
+}
+
+#help_text{
+	resize: vertical;
+}
+
+#faqAnswerModal >.modal-dialog >.modal-content{
+
+background-color:rgba(99, 99, 99, 0.95);
 
 }
 
 
-#share_titel_modal{
+
+
+.modal_subhead{
+    margin-top: 20px;
+    text-align: center;
+    background-color: #0000004d;
+    border-radius: 10px;
+    font-family: 'Amatic SC', cursive;
+    font-size: 33px;
+    color: white;
+    margin-bottom: 10px;
+}
+
+
+.addModalTitel{
     margin-top: 20px;
     text-align: center;
     background-color: #0000004d;
@@ -2270,7 +2347,7 @@ div .concept_data{
 }
 
 #concepts_modal > .modal-dialog > .modal-content > .modal-body{
-	min-height: 520px;
+	min-height: 388px;
 }
 
 .wiki_info{
@@ -2303,6 +2380,15 @@ div .concept_data{
 		width: auto;
 		max-height: 26px;
 	}
+
+.help_modal_show_intro{
+		font-size: 12px;
+	    top: 2px;
+	    right: -7px;
+	    border-top-right-radius: 8px;
+	    border-bottom-right-radius: 8px;
+	}
+
 }
 
 

@@ -113,6 +113,8 @@ class UIController {
 		this.prevent_randomclick
 
 		this.current_top_list_table
+
+		this.sendingFeedback = false;
 	}
 
 	
@@ -122,6 +124,7 @@ class UIController {
 	 */
 	initTool() {
 
+	 
 
 		this.url = new URL(window.location.href);
 		app.manager.url_concept_id = this.url.searchParams.get("concept");
@@ -152,7 +155,7 @@ class UIController {
 		this.addModalListeners();
 
 		if (app.manager.user_data.language_is_set && app.manager.user_data.crowder_dialect) {
-			console.log("Lang and Dialect Selected");
+			// console.log("Lang and Dialect Selected");
 
 			this.setRandomTitelImage(function() {
 				jQuery('#welcomeback_modal').addClass("fade");
@@ -175,7 +178,7 @@ class UIController {
 
 
 		} else if (app.manager.user_data.language_is_set && !app.manager.user_data.crowder_dialect) {
-			console.log("Lang selected, Dialect Not");
+			// console.log("Lang selected, Dialect Not");
 
 			current_language = parseInt(crowder_lang);
 			app.manager.current_language = current_language
@@ -220,7 +223,7 @@ class UIController {
 			}, 1500);
 
 		} else {
-			console.log("Lang And Dialect NOT Selected");
+			// console.log("Lang And Dialect NOT Selected");
 
 			current_language = -1;
 			app.manager.current_language = current_language
@@ -236,6 +239,96 @@ class UIController {
 			}, ".welcome_modal");
 		}
 
+
+	}
+
+
+	/**
+	 * Initializes FAQ Modal.
+	 * @return {void} [description]
+	 */
+	initFAQModal(){
+		jQuery('.helpanswer li').on('click',function(){
+			var index=jQuery(this).index()+1;
+			jQuery('#currentFAQAnswer').text(app.manager.getTranslation("CS_FAQ_ANSWER"+index))
+			jQuery('#faqAnswerModal').modal({keyboard:true});
+			jQuery('.help_cover').fadeIn();
+		})
+
+		jQuery('.help_modal_show_intro').on('click',function(){
+					jQuery('#currentFAQAnswer').text(app.manager.getTranslation("instruction_texts"))
+						jQuery('#faqAnswerModal').modal({keyboard:true});
+						jQuery('.help_cover').fadeIn();
+		})
+
+		jQuery('#faqAnswerModal').on('hidden.bs.modal',function(){
+				jQuery('.help_cover').fadeOut();
+		})
+
+		jQuery('.help_modal_show_intro span').text(app.manager.getTranslation("instruction_heads"));
+		jQuery('#feedbackbutton').text(app.manager.getTranslation("submit_texts"));
+		jQuery('#help_intro').text(app.manager.getTranslation("CS_HELP_INTRO"));
+		jQuery('#questions_feedback').text(app.manager.getTranslation("CS_HELP_QUESTION_FEEDBACK"));
+
+		var numberOfQuestions = 4; //change according to number of FAQ Questions in database or TODO query how many.
+
+		for(var i=1;i<numberOfQuestions+1;i++){
+			jQuery('#faq'+i).text(app.manager.getTranslation("CS_FAQ"+i));
+		}
+		
+			
+		if(app.manager.user_data.userLoggedIn){
+			jQuery('#help_text').prop('disabled',false);
+
+			jQuery('#feedbackbutton').on('click',function(){
+			 if(app.ui.sendingFeedback) return;
+			 app.ui.sendingFeedback = true;		
+			var textboxlength = jQuery("#help_text").val().length;
+			if(textboxlength>100){
+
+	          app.loader.sendFeedbackEmail(jQuery('#help_text').val(), function() {
+
+                    jQuery('#feedbackbutton').fadeOut('fast', function() {
+            	      var feedback_div = jQuery('<div style="background: #0000008a;" class="feedback_suggest">' + app.manager.getTranslation("CS_FAQ_ANSWER_SENT") + '</div>');
+                      feedback_div.insertAfter("#help_text" );
+                      feedback_div.fadeIn('fast');
+
+                      setTimeout(function() {
+                        jQuery('#help_modal').modal('hide');
+                    	jQuery('#help_text').val("");
+                    	feedback_div.remove();
+                    	jQuery('#feedbackbutton').fadeIn();
+        		 	     app.ui.sendingFeedback = false;		
+                    },1500)
+
+                  })
+			}) 
+
+	      }
+
+	      else{
+	      	jQuery('#help_text').css('border-color','red');
+	      	jQuery('#help_text').css('color','red');
+			jQuery('#help_text').val(app.manager.getTranslation("CS_FAQ_WARNING"))
+	    
+	      	 setTimeout(function() {
+	      	 	jQuery('#help_text').css('border-color','rgb(204, 204, 204)');
+	      	 	jQuery('#help_text').css('color','black');
+	      	 	jQuery('#help_text').val("");
+      	 	    app.ui.sendingFeedback = false;		
+	      	 }, 1000);
+	      }
+
+	     })     
+		}
+		else{
+			jQuery('#feedbackbutton').on('click',function(){
+				jQuery('#help_modal').modal('hide');
+				jQuery('#help_modal').one('hidden.bs.modal',function(){
+					app.ui.openWhyRegisterModal();
+				})
+			})
+		}
 
 	}
 
@@ -266,8 +359,8 @@ class UIController {
 				i -= 1;
 				// jQuery("#language_selectSelectBoxItText").text(app.manager.getTranslation("language_texts", i));
 				// jQuery("#language_selectSelectBoxItText").attr('data-val', app.manager.getTranslation("language_texts", i));
-				console.log(app.manager.getTranslation("language_texts", false, false, i))
-				console.log(app.manager.getTranslation("language_texts", false, false, i))
+				// console.log(app.manager.getTranslation("language_texts", false, false, i))
+				// console.log(app.manager.getTranslation("language_texts", false, false, i))
 				jQuery("#language_selectSelectBoxItText").text(app.manager.getTranslation("language_texts", false, false, i));
 				jQuery("#language_selectSelectBoxItText").attr('data-val', app.manager.getTranslation("language_texts", false, false, i));
 
@@ -418,10 +511,12 @@ class UIController {
 
 				jQuery('.c-back-button').fadeIn('slow');
 				jQuery('.infotext_head').text(app.manager.getTranslation("instruction_heads"));
+    	
 				jQuery(".text-left-span").text(app.manager.getTranslation("instruction_texts"));
 				jQuery("#dialekt_span").text(app.manager.getTranslation("lang_dialect_abbreviation"));
 				jQuery("#go_span").text(app.manager.getTranslation("go_texts"));
 				jQuery("#suggest_dialect_span").text(app.manager.getTranslation("suggest_dialect_texts"))
+				jQuery("#show_all_dialects_span").text(app.manager.getTranslation("all_dialects_texts"))
 
 				jQuery("#data_remark").text(app.manager.getTranslation("data_remark"));
 
@@ -438,7 +533,7 @@ class UIController {
 				jQuery('#welcome_modal').modal('hide');
 
 			} else {
-				jQuery('#dialect_not_selected_modal').modal('show');
+				jQuery('#dialect_not_selected_modal').modal({backdrop:true});
 			}
 		})
 
@@ -454,7 +549,7 @@ class UIController {
 				app.startMainTool();
 				//showCustomBackdrop();
 			} else {
-				jQuery('#dialect_not_selected_modal').modal('show');
+				jQuery('#dialect_not_selected_modal').modal({keyboard:true});
 			}
 		})
 
@@ -500,7 +595,7 @@ class UIController {
 
 		if (jQuery('#image_modal').hasClass('in')) {
 
-			jQuery('#image_modal').find('.i_fake_body').height('65vh');
+			jQuery('#image_modal').find('.i_fake_body').height(window.innerHeight - jQuery('#left_menu').height()-150);
 
 			var modal_margin = 30;
 			if (doc_width < 576) modal_margin = 10;
@@ -831,6 +926,15 @@ class UIController {
 			jQuery('#language_modal').modal('hide');
 		})
 
+		jQuery('#faqAnswerModal .customclose').on('click', function() {
+			jQuery('#faqAnswerModal').modal('hide');
+		})
+
+
+		jQuery('#dialect_not_selected_modal .customclose').on('click', function() {
+			jQuery('#dialect_not_selected_modal').modal('hide');
+		})
+
 		jQuery('#register_modal .customclose').on('click', function() {
 			jQuery('#register_modal').modal('hide');
 		})
@@ -861,6 +965,10 @@ class UIController {
 
 		jQuery('#share_modal .customclose').on('click', function() {
 			jQuery('#share_modal').modal('hide');
+		})
+
+		jQuery('#help_modal .customclose').on('click', function() {
+			jQuery('#help_modal').modal('hide');
 		})
 
 		jQuery('#toplistmodal .customclose').on('click', function() {
@@ -958,7 +1066,7 @@ class UIController {
 		})
 
 
-		jQuery('#concepts_modal').on('shown.bs.modal', function(e) {
+ jQuery('#concepts_modal').on('shown.bs.modal', function(e) {
 
 			if (app.manager.modals_initialized) {
 				app.manager.getDataTable("datatable_concepts").scroller.measure();
@@ -989,20 +1097,10 @@ class UIController {
 
 		jQuery('#concepts_modal').on('show.bs.modal', function(e) {
 
-			switch (app.manager.current_language) {
-				case 0:
-					jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('german_va');
-					break;
-				case 1:
-					jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('french_va');
-					break;
-				case 2:
-					jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('italian_va');
-					break;
-				case 3:
-					jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('slovenian_va');
-					break;
-			}
+			if(app.manager.current_language==0)jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('german_va');
+			else if (app.manager.current_language==1) jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('french_va');
+			else if (app.manager.current_language==2) jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('italian_va');
+			else if (app.manager.current_language==3) jQuery('#concepts_modal').find('#va_phase_wrapper_concept_list').addClass('slovenian_va');
 
 		})
 
@@ -1038,7 +1136,6 @@ class UIController {
 
 		})
 
-
 		jQuery('#message_modal').on('shown.bs.modal', function(e) {
 			jQuery('#userAuesserungInput').focus();
 			app.ui.displayTooltips(false);
@@ -1048,7 +1145,6 @@ class UIController {
 			jQuery('#userAuesserungInput').focus();
 			app.ui.displayTooltips(true);
 		})
-
 
 
 		jQuery('#register_modal').on('shown.bs.modal', function(e) {
@@ -1117,20 +1213,11 @@ class UIController {
 			var current_location_list_table = app.manager.createLocationListTable(app.manager.getData("current_location_list_table_data").data_value);
 			app.manager.addDataTable("current_location_list_table", current_location_list_table)
 
-			switch (app.manager.current_language) {
-				case 0:
-					jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('german_va');
-					break;
-				case 1:
-					jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('french_va');
-					break;
-				case 2:
-					jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('italian_va');
-					break;
-				case 3:
-					jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('slovenian_va');
-					break;
-			}
+				if(app.manager.current_language==0)			jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('german_va');
+				else if (app.manager.current_language==1) 	jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('french_va');
+				else if (app.manager.current_language==2) 	jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('italian_va');
+				else if (app.manager.current_language==3) 	jQuery('#location_list_modal').find('#va_phase_wrapper_location_list').addClass('slovenian_va');
+
 
 			app.ui.do_image_modal = false;
 		})
@@ -1181,6 +1268,13 @@ class UIController {
 			}
 		})
 
+		jQuery('#help_modal').on('hidden.bs.modal', function(e) {
+			if (!app.ui.prevent_backdrop) {
+				jQuery('#custom_modal_backdrop').fadeOut(function() { jQuery(this).remove() })
+				app.ui.displayTooltips(true);
+			}
+		})
+
 		jQuery('#highscore_select_modal').on('show.bs.modal', function(e) {
 			app.ui.displayTooltips(false);
 		})
@@ -1197,6 +1291,12 @@ class UIController {
 			}
 		})
 
+		jQuery('#help_modal').on('show.bs.modal', function(e) {
+			if (!app.ui.prevent_backdrop) {
+				app.ui.showCustomModalBackdrop();
+				app.ui.displayTooltips(false);
+			}
+		})
 
 		jQuery('#why_register_modal').on('hidden.bs.modal', function(e) {
 			if (!app.ui.prevent_backdrop) {
@@ -1216,7 +1316,6 @@ class UIController {
 		jQuery('#why_register_modal').on('shown.bs.modal', function(e) {
 			if (app.ui.prevent_backdrop) app.ui.prevent_backdrop = false;
 		})
-
 
 
 	}
@@ -1308,6 +1407,7 @@ class UIController {
 			jQuery('.login_slider').contents().last()[0].textContent = white_space + app.manager.getTranslation("login_btn");
 			jQuery('.register_btn').contents().last()[0].textContent = white_space + app.manager.getTranslation("register");
 			jQuery('.send_anonymous_btn').contents().last()[0].textContent = white_space + app.manager.getTranslation("send_anonymous_data_text");
+			jQuery('.dont_send_btn').contents().last()[0].textContent = white_space + app.manager.getTranslation("continue_text");
 			jQuery('.forgot_pass_slider').contents().last()[0].textContent = white_space + app.manager.getTranslation("forgot_password_text");
 			jQuery('.get_new_password').contents().last()[0].textContent = white_space + app.manager.getTranslation("get_new_password");
 			jQuery('.new_acc_slider').contents().last()[0].textContent = white_space + app.manager.getTranslation("new_acc_text");
@@ -1449,6 +1549,11 @@ class UIController {
 		jQuery('#shareicon').on('click', function() {
 			app.ui.openShareModal();
 		})
+
+		jQuery('#helpicon').on('click', function() {
+			app.ui.openHelpModal();
+		})
+
 	}
 
 
@@ -1759,6 +1864,19 @@ class UIController {
 		}, "#share_modal");
 	}
 
+		/**
+	 * [openHelpModal description]
+	 * @return {void} [description]
+	 */
+	openHelpModal() {
+		app.ui.setRandomTitelImage(function() {
+			app.ui.showCustomModalBackdrop();
+			jQuery('#help_modal').modal({});
+
+		}, "#help_modal");
+	}
+
+
 	/**
 	 * [createTopListTable description]
 	 * @return {void} [description]
@@ -1806,7 +1924,7 @@ class UIController {
 		var myimages = [];
 		myimages = app.manager.getData("images").data_value[id];
 
-		if (myimages.length > 0) {
+		if (myimages && myimages.length > 0) {
 			app.ui.do_image_modal = true;
 		}
 
@@ -2361,6 +2479,8 @@ class ImageUpload {
 	 *
 	 */
 	init_image_upload_form() {
+
+
 		app.ui.image_uploader.fd = new FormData(jQuery('#image_upload_form')[0]);
 
 		let dropArea = document.getElementById('drop-area')

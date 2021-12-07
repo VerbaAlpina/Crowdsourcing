@@ -192,7 +192,6 @@ class AppManager {
 			success: function(response) {
 				var locations = JSON.parse(response);
 				app.manager.addData("locations", locations)
-
 				var location_data = app.manager.getTableData(locations, "location");
 				app.manager.addData("location_data", location_data)
 				app.manager.initLocationsModal();
@@ -349,6 +348,7 @@ class AppManager {
 
 		});
 
+		  app.ui.initFAQModal();
 		console.log("MAIN TOOL STARTED")
 
 

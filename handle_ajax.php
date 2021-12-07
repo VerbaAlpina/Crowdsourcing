@@ -805,13 +805,15 @@ function returnOrte(){
 			SELECT z.Id_Ort, IFNULL(ub.Name, z.Name) AS Name , ub.Sprache FROM Orte z 
 			left join orte_uebersetzungen ub ON ub.Id_Ort = z.Id_Ort AND ub.Sprache = 'D' 
 			WHERE z.Id_Kategorie = 62 AND z.Alpenkonvention AND z.Beschreibung != 'Water Body' AND z.Name !='' 
+			ORDER BY Name ASC
 			
-			UNION SELECT Distinct z.Id_Ort, IFNULL(ub.Name, z.Name) AS Name , ub.Sprache FROM informanten i 
+		/*	UNION SELECT Distinct z.Id_Ort, IFNULL(ub.Name, z.Name) AS Name , ub.Sprache FROM informanten i 
 			left join aeusserungen a on i.Id_Informant = a.Id_Informant 
 			left join orte z on z.Id_Ort = i.Id_Gemeinde 
 			left join orte_uebersetzungen ub ON ub.Id_Ort = z.Id_Ort AND ub.Sprache = '$lang'
 			left join stimuli s on a.Id_Stimulus = s.ID_Stimulus WHERE s.Erhebung = 'CROWD'
-			AND z.Id_Kategorie = 62 AND z.Beschreibung != 'Water Body' AND z.Name !='' ORDER BY Name ASC
+			AND z.Id_Kategorie = 62 AND z.Beschreibung != 'Water Body' AND z.Name !='' ORDER BY Name ASC*/
+
 			");
 	}
 
@@ -1221,13 +1223,16 @@ function getImage(){
 		//			);
 
 		//array_push($array_konzeptId_medium,$array_konzept_Medien);
-		$array_key_value = array(
-				$konzept->Id_Konzept => $arrayImageSrc//$array_konzept_Medien
-		);
+		// $array_key_value = array(
+		// 		$konzept->Id_Konzept => $arrayImageSrc//$array_konzept_Medien
+		// );
 		//array_push($array_id_medium_pair,$array_key_value);
-		$array_id_medium_pair[$konzept->Id_Konzept] = $arrayImageSrc;
+
+		if(!empty($arrayImageSrc)) $array_id_medium_pair[$konzept->Id_Konzept] = $arrayImageSrc;
 	}
 
+
+		// print_r($array_id_medium_pair);
 
 	//echo json_encode($array_konzeptId_medium);
 	//echo json_encode($array_id_medium_pair);
@@ -1404,6 +1409,36 @@ function sendSuggestEmail(){
 
 
 	$message = "Crowdsourcing user ".$sending_user. " suggests the new concept: "."\"".$concept_suggest."\".";
+	$message = wordwrap($message, 70);
+
+	mail('verbaalpina@itg.uni-muenchen.de', $about, $message,$headers);
+
+	echo ("Email sent.");
+
+
+	wp_die();
+}
+
+
+add_action('wp_ajax_nopriv_sendFeedbackEmail', 'sendFeedbackEmail');
+add_action('wp_ajax_sendFeedbackEmail', 'sendFeedbackEmail');
+
+function sendFeedbackEmail(){
+
+	$feedback = $_REQUEST['entry'];
+	$sending_user = $_REQUEST['user'];
+	$sending_user_mail = $_REQUEST['email'];
+	$about = $sending_user." sends feedback";
+
+	$from_user = "=?UTF-8?B?".base64_encode($sending_user)."?=";
+	$subject = "=?UTF-8?B?".base64_encode($about)."?=";
+
+	$headers = "From: $from_user <$sending_user_mail >\r\n".
+			"MIME-Version: 1.0" . "\r\n" .
+			"Content-type: text/html; charset=UTF-8" . "\r\n";
+
+
+	$message = "Crowdsourcing user ".$sending_user. " sends feedback: "."\"".$feedback."\".";
 	$message = wordwrap($message, 70);
 
 	mail('verbaalpina@itg.uni-muenchen.de', $about, $message,$headers);
@@ -1967,11 +2002,29 @@ function get_dialects(){
 		$dcluster = 'ak';
 	}
 
+	$dialect_query_full = $va_xxx->get_results($va_xxx->prepare("SELECT Id_dialect, Name FROM dialects WHERE Id_dialect != 0 ORDER BY Name ASC"));
+
 	$dialect_query = $va_xxx->get_results($va_xxx->prepare("SELECT Id_dialect, Name FROM dialects JOIN dialect_clusters USING (Id_Dialect) WHERE Id_dialect != 0 AND Cluster = %s ORDER BY Name ASC",$dcluster));
 
+	$alp_dialects = array();
 	$all_dialects = array();
 
 	foreach ($dialect_query as $value) {
+
+		$id_dialect = $value->Id_dialect;
+		$dialect_name = $value->Name;
+
+		$alp_dialect = array(
+
+				"id_dialect" => $id_dialect,
+				"name" => $dialect_name,
+
+		);
+		array_push($alp_dialects, $alp_dialect);
+		//array_push($submited_answers_current_location,$aeusserung_daten);
+	}
+
+	foreach ($dialect_query_full as $value) {
 
 		$id_dialect = $value->Id_dialect;
 		$dialect_name = $value->Name;
@@ -1982,12 +2035,12 @@ function get_dialects(){
 				"name" => $dialect_name,
 
 		);
-
 		array_push($all_dialects, $dialect);
-		//array_push($submited_answers_current_location,$aeusserung_daten);
 	}
 
-	echo json_encode($all_dialects);
+	echo json_encode(
+		array("all_dialects" => $all_dialects, "alp_dialects" => $alp_dialects)
+	);
 
 	wp_die();
 }

@@ -24,10 +24,17 @@ function initMenu(){
 <span class="highscoreicon fa-stack" id="shareicon">
 <i style="opacity: 0; color: #2b2b2b;font-size: 41px;" class="fa fa-circle  fa-stack-1x" aria-hidden="true"></i>
 <i style="font-size: 44px;" class="fa fa-circle-thin fa-stack-1x" aria-hidden="true"></i>
-<i style="font-size: 23px; padding-left:5px;padding-top: 4px;" class="tb_icon fa fa-share-alt" aria-hidden="true"></i>
+<i style="font-size: 23px; padding-left:3px;padding-top: 3px;" class="tb_icon fa fa-share-alt" aria-hidden="true"></i>
 </span>
 
-<div id="custom_backdrop"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw""></i></div>
+
+<span class="highscoreicon fa-stack" id="helpicon">
+<i style="opacity: 0; color: #2b2b2b;font-size: 41px;" class="fa fa-circle  fa-stack-1x" aria-hidden="true"></i>
+<i style="font-size: 44px;" class="fa fa-circle-thin fa-stack-1x" aria-hidden="true"></i>
+<i style="font-size: 23px; padding-left:5px;padding-top: 3px;" class="tb_icon fa fa-question" aria-hidden="true"></i>
+</span>
+
+<div id="custom_backdrop"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>
 
 <div id="map"></div>
 <div id="swipe-up-div"></div>
@@ -61,48 +68,30 @@ function initMenu(){
 
 </div>
 
-  <div id="left_menu_content_ger" style="display: none">
-    <div class="row_1">
-        <span>Wie sagt man zu </span><span id="word_span" class="questionselect">Begriff</span>
-        <div class="l_row">in <span id="in_q_span"><span id="location_span" class="questionselect">Gemeinde</span> ?</span></div>
-    </div>
-    <div class="row_2">
-        <div class="user_input_container"><span><input type="text" id="user_input" placeholder="Ihre Antwort"></input><i id="submitanswer" class="fa fa-chevron-right" aria-hidden="true"></i></span></div>
-    </div>
-  </div>
-
-
-    <div id="left_menu_content_fr" style="display: none">
-    <div class="row_1">
-        <span>Comment est-ce qu´on dit pour </span><span id="word_span" class="questionselect">concept</span>
-        <div class="l_row">à <span id="in_q_span"><span id="location_span" class="questionselect">commune</span> ?</span></div>
-    </div>
-    <div class="row_2">
-        <div class="user_input_container"><span><input type="text" id="user_input" placeholder="Votre réponse"></input><i id="submitanswer" class="fa fa-chevron-right" aria-hidden="true"></i></span></div>
-    </div>
-  </div>
-
-
-    <div id="left_menu_content_ita" style="display: none">
-    <div class="row_1">
-        <span>Come si dice per </span><span id="word_span" class="questionselect">concetto</span>
-        <div class="l_row">a <span id="in_q_span"><span id="location_span" class="questionselect">comune</span> ?</span></div>
-    </div>
-    <div class="row_2">
-        <div class="user_input_container"><span><input type="text" id="user_input" placeholder="La vostra risposta"></input><i id="submitanswer" class="fa fa-chevron-right" aria-hidden="true"></i></span></div>
-    </div>
-  </div>
-
-
-  <div id="left_menu_content_slo" style="display: none">
-    <div class="row_1">
-        <span>Kako se reče </span><span id="word_span" class="questionselect">pojem</span>
-        <div class="l_row">v <span id="in_q_span"><span id="location_span" class="questionselect">občini</span> ?</span></div>
-    </div>
-    <div class="row_2">
-        <div class="user_input_container"><span><input type="text" id="user_input" placeholder="Vaš odgovor"></input><i id="submitanswer" class="fa fa-chevron-right" aria-hidden="true"></i></span></div>
-    </div>
-  </div>
+	<?php global $va_xxx;
+		$questions = $va_xxx->get_row('SELECT Begriff_D, Begriff_I, Begriff_F, Begriff_S FROM uebersetzungen WHERE Schluessel = "CS_EINGABE"', ARRAY_A);
+		$pls = $va_xxx->get_row('SELECT Begriff_D, Begriff_I, Begriff_F, Begriff_S FROM uebersetzungen WHERE Schluessel = "CS_PLACEHOLDER"', ARRAY_A);
+	
+		foreach (['D' => 'ger', 'F' => 'fr','I' => 'ita', 'S' => 'slo'] as $lang => $lang_str){
+			$question = $questions['Begriff_' . $lang];
+			
+			$start1 = mb_strpos($question, '$');
+			$end1 = mb_strpos($question, ' ', $start1);
+			$start2 = mb_strpos($question, '$', $end1);
+			
+			?>
+			  <div id="left_menu_content_<?php echo $lang_str;?>" style="display: none">
+				<div class="row_1">
+					<span><?php echo mb_substr($question, 0, $start1); ?></span><span id="word_span" class="questionselect"><?php echo mb_substr($question, $start1 + 1, $end1 - $start1 - 1); ?></span>
+					<div class="l_row"><?php echo mb_substr($question, $end1, $start2 - $end1); ?><span id="in_q_span"><span id="location_span" class="questionselect"><?php echo mb_substr($question, $start2 + 1, -1); ?></span> ?</span></div>
+				</div>
+				<div class="row_2">
+					<div class="user_input_container"><span><input type="text" id="user_input" placeholder="<?php echo $pls['Begriff_' . $lang]; ?>"></input><i id="submitanswer" class="fa fa-chevron-right" aria-hidden="true"></i></span></div>
+				</div>
+			  </div>
+			<?php
+		}
+	?>
 
 
 
@@ -459,15 +448,16 @@ function initMenu(){
      <div class="modal-body">
 
       <div class = "custom_header"><img src="<?php echo plugins_url('assets/images/',__FILE__)?>favicon_bw.png"></img>Verba Alpina </div>
-        <h1 id="share_titel_modal">Share</h1>
+        <h1 id="share_titel_modal" class="addModalTitel">Share</h1>
         <div style ="position: relative;z-index: 3;">
-          <textarea id="share_link"></textarea>
+          <textarea id="share_link" class="addModalTextarea"></textarea>
         </div>
         <div id="social_media">
           <a id="share_facebook" href="https://www.facebook.com/sharer/sharer.php?u=">  <div><i class="fab fa fa-facebook" aria-hidden="true"></i></div></a> <!-- <span> Share on Facebook</span>-->
           <a id="share_twitter" href="https://twitter.com/home?status=">                <div><i class="fab fa fa-twitter"  aria-hidden="true"></i></div></a>   <!-- <span> Share on Twitter</span>   -->
-          <a id="share_googleplus" href="https://plus.google.com/share?url=">           <div><i class="fab fa fa-google-plus" aria-hidden="true"></i></div></a>   <!-- <span> Share on Google+</span>  --> 
-          <a id="share_mail" href="mailto:verbaalpina@itg.uni-muenchen.de">                                           <div><i class="fal fa fa-envelope" aria-hidden="true"></i></div></a>  <!-- <span> Send Email</span>-->
+       <!--    <a id="share_googleplus" href="https://plus.google.com/share?url=">           <div><i class="fab fa fa-google-plus" aria-hidden="true"></i></div></a>  -->  <!-- <span> Share on Google+</span>  --> 
+          <a id="share_instagram" href="https://www.instagram.com/verba.alpina/">                <div><i class="fab fa-instagram"  aria-hidden="true"></i></div></a>  
+          <a id="share_mail" href="mailto:verbaalpina@itg.uni-muenchen.de">               <div><i class="fal fa fa-envelope" aria-hidden="true"></i></div></a>  <!-- <span> Send Email</span>-->
         </div>
       </div>
       <div class="modal-footer customfooter">
@@ -477,6 +467,62 @@ function initMenu(){
 </div><!-- /.modal -->  
 
 
+
+<div class="modal fade" id="help_modal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    <div class="help_cover"></div>
+    <!-- <div class="cover_body"></div> -->  
+    <div class="customclose"><i class="fa fa-times" aria-hidden="true"></i></div>
+     <div class="modal-body">
+
+      <div class = "custom_header"><img src="<?php echo plugins_url('assets/images/',__FILE__)?>favicon_bw.png"></img>Verba Alpina </div>
+
+        <h1 id="help_titel_modal" style ="position: relative;" class="addModalTitel">Help <div class="help_modal_show_intro"><i class="fa fa-question" aria-hidden="true"></i><span>Anleitung</span></div></h1>
+        <div style ="position: relative;z-index: 3;">
+
+          <div id="help_intro" class="helpanswer"></div>
+
+            <div class="modal_subhead" style="margin-top: 10px;" id="faqs">Frequently Asked Questions</div>
+
+          <ul class="helpanswer"> 
+            <li id="faq1"></li>
+            <li id="faq2"></li>
+            <li id="faq3"></li>
+            <li id="faq4"></li>
+          </ul>
+
+            <div class="modal_subhead" style="margin-top: 10px;" id="questions_feedback"></div>
+
+          <textarea disabled="true" id="help_text" class="addModalTextarea"></textarea>
+
+             <div class="registerbutton" id="feedbackbutton" style="margin-top: 12px"></div>
+
+        </div>
+      </div>
+      <div class="modal-footer customfooter">
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->  
+
+<div class="modal fade" id="faqAnswerModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+    <div class="customclose"><i class="fa fa-times" aria-hidden="true"></i></div>
+     <div class="modal-body">
+      <div class = "custom_header"><img src="<?php echo plugins_url('assets/images/',__FILE__)?>favicon_bw.png"></img>Verba Alpina </div>
+       <div class="dialect_not_selected_modal_content">
+        
+        <div id="currentFAQAnswer">FAQ Antwort</div> 
+
+       </div>
+      </div>
+      <div class="modal-footer customfooter">
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->  
 
 
 

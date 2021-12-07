@@ -675,17 +675,16 @@ class MapController {
 
 		var size;
 
-		if (label.length == 1) size = 24;
-		else if (label.length == 2) size = 32;
-		else size = 40;
+		if (label.length == 1) size = 22;
+		else if (label.length == 2) size = 28;
+		else if (label.length == 3) size = 34;
+		else if (label.length == 4) size = 40;
 
 		//sizes will be doubled and then scaled down again by gmap 
 
 		var number = parseInt(label);
-		var add = Math.floor(number / 4);
-		size += add;
 
-		if (size > 50) size = 50; //max size = 50px;
+	
 		size *= 2; //multiply size for double size image for better quality
 
 		var canvas = document.createElement('canvas');

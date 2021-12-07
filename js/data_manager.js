@@ -175,11 +175,13 @@ class DataManager {
    * @return {var}                 [description]
    */
   getTranslation(key, single_element = true, array_elements = false, index = 0) {
+
     try {
       if (single_element) {
         return this.translations[key][app.manager.current_language]
       } else if (array_elements) {
         return this.translations[key]
+
       } else {
         return this.translations[key][index]
       }
@@ -213,14 +215,15 @@ class DataManager {
       var crowder_lang = obj.crowder_lang; //null;
       app.manager.selected_dialect = obj.crowder_dialect;
     }
-    console.log("Current lang: " + crowder_lang)
+    // console.log("Current lang: " + crowder_lang)
 
-    if (crowder_lang) {
+    if (!crowder_lang) {
       crowder_lang = 0
     }
 
     app.manager.user_data = obj
     app.manager.current_language = crowder_lang
+
   }
 
 
@@ -241,6 +244,7 @@ class DataManager {
     for (var i = 0; i < in_data.length; i++) {
 
       if (origin == 'dialect') {
+
         var res = { name: in_data[i].name, id: in_data[i].id_dialect, column1: {} };
       } else if (origin == 'concept') {
         var res = { va_phase: in_data[i].va_phase, column1: {}, concept_id: in_data[i].id, concept_name: in_data[i].name, qid: in_data[i].qid };
@@ -289,7 +293,7 @@ class DataManager {
    * @param  {var} data  [description]
    * @return {var}       [description]
    */
-  create_dialect_list_modal(modal, data) {
+  create_dialect_list_modal(modal, data, data_alternative) {
 
     jQuery('body').addClass('modal_init');
 
@@ -304,7 +308,7 @@ class DataManager {
     var emptyTable;
 
     id = "#dialect_modal_table";
-    scrollY = "76vh";
+    scrollY = "calc(100vh - 255px)";
     emptyTable = app.manager.getTranslation("no_results_data_table");
 
 
@@ -343,9 +347,33 @@ class DataManager {
           buttonparent = jQuery('<div class="list_modal_button_parent"></div>');
           jQuery('#dialect_modal_table_filter').after(buttonparent);
 
-          
+            
+          // WHILE TRANSLATIONS ARE SET HERE THEY ARE "REALLY" SET IN UI_CONTROLLER... (Result of refactor?)
+
           var suggest_button = jQuery('<div class="list_modal_button_in_search suggest_dialect"><i class="fa fa-plus" aria-hidden="true"></i> <span id="suggest_dialect_span">' + app.manager.getTranslation("suggest_dialect_texts") + '</span></div>');
           buttonparent.append(suggest_button);
+
+          var all_dialects_button = jQuery('<div class="list_modal_button_in_search all_dialects"><i class="fa fa-list" aria-hidden="true"></i> <span id="show_all_dialects_span">' + app.manager.getTranslation("all_dialects_texts") + '</span></div>');
+          buttonparent.append(all_dialects_button);
+
+          var toggle = false;
+          all_dialects_button.on('click',function(){
+  
+            if(!toggle){
+              jQuery('#show_all_dialects_span').text(app.manager.getTranslation("alpine_dialects_texts"))
+                table.clear();
+                table.rows.add(data_alternative);
+                table.draw();
+            }
+            else {
+              jQuery('#show_all_dialects_span').text(app.manager.getTranslation("all_dialects_texts"))
+                table.clear();
+                table.rows.add(data);
+                table.draw();
+            }
+            toggle=!toggle;
+
+          })
 
           suggest_button.on('click', function() {
 
@@ -666,7 +694,7 @@ class DataManager {
 
     if (origin == "concept") {
       id = "#concept_modal_table";
-      scrollY = "76vh";
+      scrollY = "calc(100vh - 255px)";
       emptyTable = app.manager.getTranslation("no_results_data_table");
     }
 
@@ -933,6 +961,8 @@ class DataManager {
         if (!app.manager.modals_initialized) {
 
           setTimeout(function() {
+            jQuery("#va_phase_wrapper_concept_list").find('.va_phase_1').click() // HACK TO SET INITIAL SHOWN CONCEPTS due to unreadable code
+            jQuery("#va_phase_wrapper_concept_list").find('.va_phase_2').click() // HACK TO SET INITIAL SHOWN CONCEPTS due to unreadable code
             modal.modal('hide');
           }, 1); //for closing modal on init
 
@@ -962,13 +992,12 @@ class DataManager {
    */
   createLocationListModal(modal, data, origin) {
     // used only for locations modal list
-
     var id;
     var scrollY;
     var emptyTable;
 
     id = "#location_modal_table";
-    scrollY = "76vh";
+    scrollY = "calc(100vh - 255px)";
     emptyTable = app.manager.getTranslation("search_for_location");
 
     var table = modal.find(id).DataTable({
@@ -1088,7 +1117,6 @@ class DataManager {
           setTimeout(function() { modal.modal('hide'); }, 1); //for closing modal on init
 
           app.manager.locations_modal_modals_initialized = true;
-
           if (app.manager.locations_modal_modals_initialized && app.manager.concepts_modal_initialized) {
             app.manager.modals_initialized = true;
 
@@ -1339,7 +1367,7 @@ class DataManager {
 
       data: table_data,
       deferRender: false,
-      scrollY: "75vh",
+      scrollY: "calc(100vh - 255px)",
       scrollX: false,
       scrollCollapse: true,
       info: false,
@@ -1680,6 +1708,7 @@ class DataManager {
    * @param  {Array} translations Array Data fetched from server
    */
   init_translations(translations) {
+
     this.translations["welcomeback_texts"] = translations['CS_WELCOME_BACK']
 
     this.translations["register_texts"] = translations['CS_REGISTER']
@@ -1717,6 +1746,10 @@ class DataManager {
     this.translations["nothing_found"] = translations['CS_no_location_found'];
 
     this.translations["suggest_dialect_texts"] = translations['suggest_dialect_texts'];
+
+    this.translations["all_dialects_texts"] = translations['CS_ALL_DIALECTS'];
+
+    this.translations["alpine_dialects_texts"] = translations['CS_SHOW_ALPINE_DIALECTS'];
 
     this.translations["selected_dialect_texts"] = translations['selected_dialect_texts'];
 
@@ -1815,7 +1848,7 @@ class DataManager {
     this.translations["send_anonymous_data_text"] = translations['CS_send_anonymous_data_text'];
     this.translations["send_anonymous_data_modal_text"] = translations['CS_send_anonymous_data_modal_text'];
     this.translations["details_why_register_send_anonymous_data"] = translations['CS_details_why_register_send_anonymous_data'];
-
+    this.translations["continue_text"] = translations['CS_CONTINUE'];
 
     this.translations["forgot_password_text"] = translations['CS_forgot_password_text'];
     this.translations["enter_username_or_email"] = translations['CS_enter_username_or_email']
@@ -1854,6 +1887,23 @@ class DataManager {
     this.translations["upload_complete"] = translations["CS_upload_complete"]
     this.translations["upload_failed"] = translations["CS_upload_failed"]
     this.translations["clear_images"] = translations["CS_clear_images"]
+
+    this.translations["CS_HELP_INTRO"] = translations['CS_HELP_INTRO']
+    this.translations["CS_HELP_QUESTION_FEEDBACK"] = translations['CS_HELP_QUESTION_FEEDBACK']
+
+    this.translations["CS_FAQ1"] = translations['CS_FAQ1']
+    this.translations["CS_FAQ2"] = translations['CS_FAQ2']
+    this.translations["CS_FAQ3"] = translations['CS_FAQ3']
+    this.translations["CS_FAQ4"] = translations['CS_FAQ4']
+
+    this.translations["CS_FAQ_ANSWER1"] = translations['CS_FAQ_ANSWER1']
+    this.translations["CS_FAQ_ANSWER2"] = translations['CS_FAQ_ANSWER2']
+    this.translations["CS_FAQ_ANSWER3"] = translations['CS_FAQ_ANSWER3']
+    this.translations["CS_FAQ_ANSWER4"] = translations['CS_FAQ_ANSWER4']
+
+    this.translations["CS_FAQ_WARNING"] = translations['CS_FAQ_WARNING']
+    this.translations["CS_FAQ_ANSWER_SENT"] = translations['CS_FAQ_ANSWER_SENT']
+
   }
 
 
