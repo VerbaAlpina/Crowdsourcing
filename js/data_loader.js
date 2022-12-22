@@ -226,7 +226,7 @@ class DataLoader {
 	 * @function saveWord
 	 */
 	saveWord() {
-
+		jQuery('.modal').modal('hide');
 		var input_word = jQuery("#user_input").val();
 		var location = jQuery('#location_span').html();
 		var location_id = jQuery('#location_span').attr('data-id_location');
@@ -249,7 +249,7 @@ class DataLoader {
 			var concept_index = app.loader.get_table_index_by_va_phase(concept_id);
 		}
 
-		/*Check if fields for conzept and region are filled*/
+		/*Check if fields for concept and region are filled*/
 		if (input_word.localeCompare("") != 0 && location_id != null && app.ui.concept_selected == true) {
 
 			app.ui.stage = 5;
@@ -473,6 +473,11 @@ class DataLoader {
 										if (isAndroid) {
 											app.map.map.panTo(app.map.location_markers[location_id].getPosition());
 										}
+
+										setTimeout(function() {
+											jQuery('.modal').modal('hide');
+											jQuery('#word_span').click(); //reopen concept modal
+										}, 2500);
 
 									}
 								});

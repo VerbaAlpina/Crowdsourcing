@@ -71,6 +71,10 @@ html{
 	overflow: hidden !important;
 }
 
+.crowdBody{
+	background: black;
+}
+
 #wpadminbar{
 
 z-index: 5 !important;
@@ -78,8 +82,29 @@ z-index: 5 !important;
 
 }
 
+.bounce-6 {
+    animation-name: bounce-6;
+    animation-timing-function: ease;
+    animation-delay: 1s;
+}
+@keyframes bounce-6 {
+    0%   { top: 0; }
+    10%  { top:0; }
+    30%  { top: -25px; }
+    50%  { top: 0; }
+    57%  { top: -2px; }
+    66%  { top: 0; }
+    100% { top: 0; }
+}
+
 .popover{
 	z-index: 1048 !important;
+
+}
+
+.popover:not(.login_popover_p){
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
 }
 
 #map {
@@ -89,6 +114,47 @@ z-index: 5 !important;
 		position: absolute;
 		top: 0;
 		z-index: 0;
+		background: #262626;
+}
+
+#tutorial_slider .carousel-item img{
+    margin-bottom: 10px;
+box-shadow: 0px 11px 20px -3px rgba(0,0,0,0.33);
+-webkit-box-shadow: 0px 11px 20px -3px rgba(0,0,0,0.33);
+-moz-box-shadow: 0px 11px 20px -3px rgba(0,0,0,0.33);
+}
+
+#tutorial_slider .carousel-caption{
+    bottom: 10px;
+    padding: 0px;
+    margin-bottom: 10px;
+    text-align: center;
+    width: 100%;
+    position: relative;
+    left: 0px;
+    top: 0px;
+    font-size: 26px;
+    font-family: 'Amatic SC';
+}
+
+
+
+#tutorial_modal .modal-body{
+	padding: 0px !important;
+	background: #3c4d83;
+}
+
+.tutorial.carousel-indicators{
+	bottom: -19px;
+}
+
+.tutorial.carousel-indicators li{
+	border-color :#00018c;
+}
+
+
+.tutorial.carousel-indicators li.active{
+	background-color: #3060f887 !important;
 }
 
 .modal-open .modal {
@@ -277,6 +343,68 @@ cursor: pointer;
 			display:block;
 }
 
+
+#tutorial_modal .cc_control {
+    position: absolute;
+    top: calc(50% - 55px);
+    font-size: 20px;
+    opacity: 0.7;
+    margin-left: 10px;
+    margin-right: 10px;
+    color: #fff;
+}
+
+#tutorial_modal .cc_control i{
+  text-shadow: 1px 1px #000;
+}
+
+
+
+
+.concept_hint{
+	position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #000000d1;
+    z-index: 20;
+    left: 0px;
+    top: 0px;
+    display: none;
+}
+
+.concept_hint .cs_arrow{
+    width: 50px;
+    right: -6px;
+    top: 85px;
+    position: absolute;
+}
+
+.concept_hint .hint_text{
+    color: white;
+    font-family: 'Amatic SC';
+    font-size: 27px;
+    position: absolute;
+    top: 70px;
+    right: 50px;
+    text-align: right;
+}
+
+.dark_bg #custom_modal_backdrop{
+	opacity: 0.95;
+}
+
+.hintclose{
+	position: absolute;
+    right: 7px;
+    color: #ababab;
+    z-index: 11;
+    cursor: pointer;
+}
+
+.hintclose:hover{
+	opacity: 0.9;
+}
+
 .welcome_modal .modal-body{
 
 	/*background: url(./assets/images/titel_1.jpg) no-repeat;*/
@@ -414,10 +542,19 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 	opacity: 1.0;
 }
 
+#upload_image_modal .modal-dialog{
+	max-width: 250px;
+}
+
+.image-upload-modal-title{
+	font-size: 14px;
+	margin-top: 10px;
+}
 
 #upload_image_modal .modal-content{
     background: #313131;
     color: white;
+    max-width: 250px;
 }
 
 #upload_image_modal .customclose{
@@ -426,18 +563,31 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 
 #upload_image_modal .modal-footer{
 	border: none !important;
+	padding: 0px;
+    padding-top: 15px;
+    text-align: center;
 }
 
 #upload_image_modal .modal-footer #close_modal{
 	background: none;
 	border: 1px solid white;
 	color: white;
+	font-size: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 #upload_image_modal .modal-footer #upload_images{
     background: none;
     border: 1px solid #009200;
     color: #00bb00;
+    font-size: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 #upload_image_modal .btn:hover{
@@ -483,6 +633,26 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 
 }
 
+
+@media screen and (max-height: 640px){
+
+	#tutorial_modal .modal-dialog{
+	transform: scale(0.8);
+	top: -60px;
+    }   
+
+}
+
+@media screen and (max-height: 520px){
+
+	#tutorial_modal .modal-dialog{
+	transform: scale(0.6);
+	top: -120px;
+    }   
+
+}
+
+
 @media screen and (max-height: 430px){
 	#welcome_modal .first-info{top: 9px;}
 }
@@ -524,6 +694,21 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 	margin-left: 0px!important;
 }
 
+}
+
+@media screen and (max-width: 768px) {
+	#suggest_image_upload{
+		display: none;
+	}
+
+	.concept_hint .hint_text{
+		font-size: 23px;
+		top: 77px;
+	}
+
+	#tutorial_slider .carousel-caption{
+		font-size: 20px;
+	}
 }
 
 @media screen and (max-width: 675px) {
@@ -657,6 +842,14 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00000000', e
 	body .list_modal_button_va_phase{
 	 	padding: 5px 10px;
 	 }
+
+	 .concept_hint .hint_text{
+		right: 53px;
+	}
+
+	.concept_hint .cs_arrow{
+		right: -2px;
+	}
 
 }
 
@@ -828,7 +1021,7 @@ max-width: 100%;
 }
 
 .i_fake_body{
-
+	background-position: center !important;
 	height: 65vh;
 }
 
@@ -1012,10 +1205,10 @@ width: 100%;
 	z-index: 10;
 }
 
-#image_modal .i_fake_body{
+/*#image_modal .i_fake_body{
 	 -webkit-filter: grayscale(100%);
 		filter: grayscale(100%);
-}
+}*/
 
 #image_modal .customclose{
 	color:white;
@@ -1911,6 +2104,10 @@ user-select: none;
     margin-top: 101px;
 }
 
+#tutorialicon{
+    margin-top: 150px;
+}
+
 .highscoreicon:hover{
 	opacity: 0.85;
 	cursor: pointer;
@@ -2461,6 +2658,11 @@ div .concept_data{
   padding: 10px;
   position: relative;
   border: 2px dashed white !important;
+  font-size: 14px;
+}
+
+#drop-area .accept-terms{
+	font-size: 12px;
 }
 
 #drop-area.highlight {
@@ -2499,7 +2701,7 @@ p {
   width: 100%;
   height: 100%;
   max-height: 200px;
-  min-height: 145px;
+  min-height: 70px;
   text-align: center;
 }
 

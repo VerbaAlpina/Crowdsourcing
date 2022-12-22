@@ -200,12 +200,12 @@ function enqueue_scripts() {
 /**
  * Adds audio script, currently not used
  */
-add_action('wp_head','add_wavesurfer_lib');
-function add_wavesurfer_lib(){
-	?>
-	<script src="https://unpkg.com/wavesurfer.js"></script>
-	<?php
-}
+// add_action('wp_head','add_wavesurfer_lib');
+// function add_wavesurfer_lib(){
+	// 
+	// <script src="https://unpkg.com/wavesurfer.js"></script>
+	// 
+// }
 
 /**
  * A possible way, but currentlynot used for internationalization.

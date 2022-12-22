@@ -18,13 +18,13 @@ function initMenu(){
 <span class="highscoreicon fa-stack" id="showhighscore">
 <i style="opacity: 0.8; color: #2b2b2b;font-size: 41px;" class="fa fa-circle  fa-stack-1x" aria-hidden="true"></i>
 <i style="font-size: 44px;" class="fa fa-circle-thin fa-stack-1x" aria-hidden="true"></i>
-<i style="font-size: 23px; padding-left:5px;padding-top: 4px;" class="fa fa-trophy fa-stack-2x" aria-hidden="true"></i>
+<i style="font-size: 23px; padding-left:6px;padding-top: 5px;" class="fa fa-trophy fa-stack-2x" aria-hidden="true"></i>
 </span>
 
 <span class="highscoreicon fa-stack" id="shareicon">
 <i style="opacity: 0; color: #2b2b2b;font-size: 41px;" class="fa fa-circle  fa-stack-1x" aria-hidden="true"></i>
 <i style="font-size: 44px;" class="fa fa-circle-thin fa-stack-1x" aria-hidden="true"></i>
-<i style="font-size: 23px; padding-left:3px;padding-top: 3px;" class="tb_icon fa fa-share-alt" aria-hidden="true"></i>
+<i style="font-size: 23px; padding-left:3px;padding-top: 2px;" class="tb_icon fa fa-share-alt" aria-hidden="true"></i>
 </span>
 
 
@@ -32,6 +32,12 @@ function initMenu(){
 <i style="opacity: 0; color: #2b2b2b;font-size: 41px;" class="fa fa-circle  fa-stack-1x" aria-hidden="true"></i>
 <i style="font-size: 44px;" class="fa fa-circle-thin fa-stack-1x" aria-hidden="true"></i>
 <i style="font-size: 23px; padding-left:5px;padding-top: 3px;" class="tb_icon fa fa-question" aria-hidden="true"></i>
+</span>
+
+<span class="highscoreicon fa-stack" id="tutorialicon">
+<i style="opacity: 0; color: #2b2b2b;font-size: 41px;" class="fa fa-circle  fa-stack-1x" aria-hidden="true"></i>
+<i style="font-size: 44px;" class="fa fa-circle-thin fa-stack-1x" aria-hidden="true"></i>
+<i style="font-size: 18px; padding-left:6px;padding-top: 3px; top:1px;" class="tb_icon fas fa-graduation-cap" aria-hidden="true"></i>
 </span>
 
 <div id="custom_backdrop"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>
@@ -175,6 +181,68 @@ function initMenu(){
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->  
 
+
+<!--Tutorial Modal-->
+
+<div class="modal fade" id="tutorial_modal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+          <div class="customclose"><i class="fa fa-times" aria-hidden="true"></i></div>
+     <div class="modal-body">
+ 
+         <div class = "custom_header"><img src="<?php echo plugins_url('assets/images/',__FILE__)?>favicon_bw.png"></img>Verba Alpina </div>
+
+         <div id="tutorial_slider" class="carousel slide" data-ride="carousel" data-interval="false" >
+
+          <ol class="tutorial carousel-indicators findicators">
+            <li data-target="#tutorial_slider" data-slide-to="0" class="active"></li>
+            <li data-target="#tutorial_slider" data-slide-to="1"></li>
+            <li data-target="#tutorial_slider" data-slide-to="2"></li>
+          </ol>
+
+          <div class="carousel-inner" role="listbox">
+
+            <div class="carousel-item active" id="tuto_1">
+                <img src="<?php echo plugins_url('assets/images/',__FILE__)?>tutorial_1.gif"></img>
+                   <div class="carousel-caption "> Schritt 1 </div>  
+            </div>
+
+            <div class="carousel-item"  id="tuto_2">
+                <img src="<?php echo plugins_url('assets/images/',__FILE__)?>tutorial_2.gif"></img>
+                   <div class="carousel-caption "> Schritt 2 </div>  
+            </div>
+
+            <div class="carousel-item"  id="tuto_3">
+                <img src="<?php echo plugins_url('assets/images/',__FILE__)?>tutorial_3.gif"></img>
+                   <div class="carousel-caption "> Schritt 3 </div>  
+            </div>
+
+             <a class="carousel-control-prev cc_control" href="#tutorial_slider" role="button" data-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+              <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next cc_control" style="right:0px;" href="#tutorial_slider" role="button" data-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+              <span class="sr-only">Next</span>
+            </a>
+ 
+          </div>
+  <!--        <a class="left carousel-control" href="#first_slider" role="button" data-slide="prev">
+            <span class="icon-prev" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#first_slider" role="button" data-slide="next">
+            <span class="icon-next" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a> -->
+        </div>
+
+      </div><!-- /.modal-body -->
+      <div class="modal-footer customfooter"></div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->  
+
 <!--The Dialect Modal-->
 <div class="modal fade list_modal" id="dialect_modal">
   <div class="modal-dialog" role="document">
@@ -229,10 +297,12 @@ function initMenu(){
 
 
 <div class="modal list_modal" id="concepts_modal">
+
   <div class="modal-dialog" role="document">
     <div class="modal-content">
     <div class="customclose"><i class="fa fa-times" aria-hidden="true"></i></div>
       <div class="modal-body">
+        <div class="concept_hint"><div class="hintclose"><i class="fa fa-times" aria-hidden="true"></i></div><img class="cs_arrow" src="<?php echo plugins_url('assets/images/',__FILE__)?>cs_arrow_bent.png"></img> <div class="hint_text"> Bevor es losgeht: hier können Sie aus drei Konzeptdomänen wählen </div> </div>
 
        <div class = "custom_header"><img src="<?php echo plugins_url('assets/images/',__FILE__)?>favicon_bw.png"></img>Verba Alpina </div>
 
@@ -586,7 +656,7 @@ function initMenu(){
       <!--   <button type="button" class="close" data-dismiss="modal" aria-label="Close"> 
           <span aria-hidden="true">&times;</span> -->
         </button>
-        <div class="modal-title">Image Upload</div>
+        <div class="image-upload-modal-title">Image Upload</div>
         
       </div>
       <div class="modal-body" id="upload_image_body">
@@ -604,7 +674,7 @@ function initMenu(){
         <div id="gallery">
         </div>
 
-        <div>
+        <div class="accept-terms">
           <input id="accept_req_image_upload" type="checkbox" name="accept_req_image_upload" value="Check Licensing"> 
           <label for="accept_req_image_upload" id="accept_terms_label" style="display: contents;">Der Nutzer muss vor dem Upload zustimmen, dass er die Rechte an den Bildern hat und sie unter CC BY SA 4.0 zur Verfügung stellt</label>
         </div>

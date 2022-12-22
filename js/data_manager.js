@@ -199,6 +199,7 @@ class DataManager {
    *
    */
   declare_user_data(obj) {
+
     var userLoggedIn = obj.userLoggedIn;
     if (userLoggedIn) {
       var language_is_set = obj.language_is_set;
@@ -1809,6 +1810,10 @@ class DataManager {
 
     this.translations["input_select_texts"] = translations['CS_TUTORIAL_3'];
 
+        this.translations["CS_GIF_TUTORIAL_1"] = translations['CS_GIF_TUTORIAL_1'];
+        this.translations["CS_GIF_TUTORIAL_2"] = translations['CS_GIF_TUTORIAL_2'];
+        this.translations["CS_GIF_TUTORIAL_3"] = translations['CS_GIF_TUTORIAL_3'];
+        this.translations["CS_CONCEPT_DOMAIN_OVERLAY"] = translations['CS_CONCEPT_DOMAIN_OVERLAY'];
 
     this.translations["location_select_texts"] = translations['CS_TUTORIAL_1'];
 

@@ -39,7 +39,7 @@ function saveWord(){
 	$gemeinde_id = $_REQUEST['gemeinde_id'];
 	$current_user = ($_REQUEST['current_user']);
 	$current_language = $_REQUEST['current_language'];
-	$current_dialect = $_REQUEST['current_dialect'];
+	$current_dialect = stripslashes($_REQUEST['current_dialect']);
 	$current_user_age = $_REQUEST['current_user_age'];
 
 	$dialect_id_q = $va_xxx->get_results(
@@ -1198,7 +1198,7 @@ function getImage(){
 
 	foreach ($konzepte as $konzept) {
 
-		$mediumID = $va_xxx->get_results("SELECT Id_Medium FROM vtbl_medium_konzept WHERE Id_Konzept = $konzept->Id_Konzept");
+		$mediumID = $va_xxx->get_results("SELECT Id_Medium FROM vtbl_medium_konzept WHERE Id_Konzept = $konzept->Id_Konzept AND NOT Konzeptillustration");
 		$arrayImageSrc = array();
 		if($mediumID != null){
 

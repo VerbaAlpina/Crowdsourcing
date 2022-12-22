@@ -17,7 +17,7 @@ class MapController {
 		 * [map_object description]
 		 * @type {Map}
 		 */
-		this.map_object = new Map(this.options)
+		this.map_object = new LeafletMap(this.options)
 
 		/**
 		 * [map description]
@@ -389,7 +389,7 @@ class MapController {
 
 		var infoWindowContent = [
 			"<div class='inputWrapper'>",
-			"" + this.translateInfoWindowText(infoWindowOrtsname, concept, bezeichnung, app.manager.user_data.current_user) + "<br>",
+			"" + this.translateInfoWindowText(infoWindowOrtsname, concept, bezeichnung, app.manager.user_data.current_user),
 			"<div id='dialect_wrapper'><span id='i_span_2' style='display:inline-block'>" + app.manager.getTranslation("the_word_dialect") + ":&nbsp;" + "</span>" + "<div id='dialect_infowindow' data-submited-answer=" + aeusserung_id + " style='display:inline-block'>" + app.manager.selected_dialect + "</div></div>",
 			"<div class='infbtnwrapper'>",
 			"<button style='display:inline-block;margin-right:5px;' id='edit_input' type='button' class='ifw_change_dialect btn btn-primary btn-sm'>" + app.manager.getTranslation("change_answer") + " " + "</button>",
@@ -788,7 +788,7 @@ class MapController {
 
 }
 
-class Map {
+class LeafletMap {
 	constructor(options) {
 		this.map = L.map('map', options).setView([45.483678, 11.410439], 6);
 

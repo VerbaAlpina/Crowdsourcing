@@ -50,7 +50,7 @@ class AppManager {
 		}
 
 		var success_request_user_data = function(response) {
-			// console.log("SUCCESS 2")
+			//console.log("SUCCESS 2")
 			app.manager.declare_user_data(JSON.parse(response));
 		}
 
@@ -136,11 +136,29 @@ class AppManager {
 					app.ui.submit_button_clicked = false; /*console.log('submit button: After saveword() ' + app.ui.submit_button_clicked);*/
 				}, 1000);
 
-
 			}
 
 		})
 
+		window.onkeyup = function(e) {
+		var key = e.keyCode ? e.keyCode : e.which;
+
+		if (key == 13) {
+
+			if (!app.ui.submit_button_clicked) {
+					app.loader.saveWord();
+					app.ui.submit_button_clicked = true;
+					setTimeout(function() {
+						app.ui.submit_button_clicked = false; /*console.log('submit button: After saveword() ' + app.ui.submit_button_clicked);*/
+					}, 1000);
+
+				}
+		}
+	}
+
+
+
+		
 		/**
 		 * set user language -> to be saved as current_language in the wp_db
 		 */
@@ -349,7 +367,8 @@ class AppManager {
 		});
 
 		  app.ui.initFAQModal();
-		console.log("MAIN TOOL STARTED")
+		  
+		/*console.log("MAIN TOOL STARTED")*/
 
 
 	}

@@ -162,12 +162,12 @@ function add_wavesurfer(){
 		});
 
 	play_audio_btn.on("click", function(){
-		console.log("click");
+/*		console.log("click");*/
 		wavesurfer.play();
 	})
 
 	delete_audio.on("click", function(){
-		console.log("delete");
+	/*	console.log("delete");*/
 		jQuery("#waveform").css("display", "none");
 		jQuery("#rec_audio").css("display", "inline-block");
 	})
